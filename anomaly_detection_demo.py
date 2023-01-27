@@ -83,7 +83,7 @@ class Mvtec(Dataset):
             image = image.convert('RGB')
         image = self.transform(image)
         labels = self.data_frame.iloc[idx, 1]
-        sample = {'data': image, 'label': labels}
+        sample = {'data': image, 'label': labels, 'file_name' : img_name}
 
         return sample
 
@@ -99,7 +99,7 @@ print("Preparing Dataloader for Training Images \n")
 
 import time
 
-
+tt=time.time()
 trainset = Mvtec(root_dir,object_type=object_type,split='train',im_size=im_size)
 testset = Mvtec(root_dir,object_type=object_type,split='test',defect_type='all',im_size=im_size)
 
@@ -107,12 +107,16 @@ classes = trainset.getclasses()
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
 test_loader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False,num_workers=num_workers)
 
+print("Time taken in Data loader", time.time()-tt)
+
 
 ###################################
 ### LOAD MODEL  ###################
 ###################################
 print("Loading Backbone ResNet50 Model \n")
+tt=time.time()
 net = resnet50(weights=ResNet50_Weights.IMAGENET1K_V1)
+print("Time taken in Loading Model", time.time()-tt)
 net.eval()
 
 
@@ -130,6 +134,8 @@ pool_out=torch.nn.functional.avg_pool2d(features, pool)
 outputs_inner = pool_out.contiguous().view(pool_out.size(0), -1)
 
 data_mats_orig = torch.empty((outputs_inner.shape[1], len(trainset))).to(device)
+tt=time.time()
+t1=0
 with torch.no_grad():
     data_idx = 0
     num_ims = 0
@@ -139,22 +145,28 @@ with torch.no_grad():
         labels = data['label']
         images, labels = images.to(device), labels.to(device)
         num_samples = len(labels)
+        t2=time.time()
         features = partial_model(images)[layer]
         pool_out=torch.nn.functional.avg_pool2d(features, pool)
         outputs = pool_out.contiguous().view(pool_out.size(0), -1)
         oi = torch.squeeze(outputs)
         data_mats_orig[:, data_idx:data_idx+num_samples] = oi.transpose(1, 0)
+        t1+=time.time()-t2
         num_ims += 1
         data_idx += num_samples
 total_time=time.time()-tt
-
+print("Total Time taken in data loading + Feature Extraction", total_time)
+print("Total Time taken in Feature Extraction", t1)
+print("Total Time taken in data loading", total_time-t1)
 ###################################
 ### PCA MODELING  #################
 ###################################
 print("Train PCA Kernel on training images \n")
 data_mats_orig = data_mats_orig.numpy()
+tt=time.time()
 pca_mats = PCA(pca_thresholds)
 pca_mats.fit(data_mats_orig.T)
+print("Time taken in PCA training", time.time()-tt)
 
 features_reduced = pca_mats.transform(data_mats_orig.T)
 features_reconstructed = pca_mats.inverse_transform(features_reduced)
@@ -167,34 +179,41 @@ print("Training Complete \n")
 
 
 
-###################################
-### Inference Evaluation Begins  ##
-###################################
-print("Inference Evaluation Begins on",  len(test_loader.dataset), "Test Images \n")
+
+
+####################################################################################
+#######################INFERENCE DEMO ##############################################
+####################################################################################
+####################################################################################
+
+
+def print_results(file_names, scores, gt, threshold=-42):
+    for file_name,score,ground_truth in zip(file_names,scores, gt):
+        print("File Name", file_name, "Score", score, "Ground Truth", "Good" if ground_truth==1 else "Defect", "Prediction", "Good" if score > threshold else "Defect")
+
+demoset = Mvtec(root_dir,object_type=object_type,split='test',defect_type='demo',im_size=im_size)
+demo_loader = torch.utils.data.DataLoader(demoset, batch_size=14, shuffle=False,num_workers=num_workers)
 
 
 with torch.no_grad():
-    len_dataset = len(test_loader.dataset)
+    len_dataset = len(demo_loader.dataset)
     gt = torch.zeros(len_dataset)
-
     scores = np.empty(len_dataset)
-
     count = 0
-    for k, data in enumerate(tqdm(test_loader)):
+    for k, data in enumerate(tqdm(demo_loader)):
 
         inputs = data['data'].to(memory_format=torch.channels_last)
-
         labels = data['label']
+        file_names = data['file_name']
         num_im = inputs.shape[0]
+        
 
         features = partial_model(inputs)[layer]
         pool_out=torch.nn.functional.avg_pool2d(features, pool)
         outputs = pool_out.contiguous().view(pool_out.size(0), -1)
-
         feature_shapes = outputs.shape
         oi = outputs
-        oi_or = oi
-
+        oi_or = oi       
         oi_j = pca_mats.transform(oi)
         oi_reconstructed = pca_mats.inverse_transform(oi_j)
 
@@ -204,13 +223,19 @@ with torch.no_grad():
 
         gt[count:count + num_im] = labels
         count += num_im
+        print_results(file_names, scores, gt, threshold=-42)
     gt = gt.numpy()
 
 ###################################
 ### AUROC SCORE for Evaluation  ###
 ###################################
 print("AUROC is computed on",  len(test_loader.dataset), "Test Images \n")
-fpr_binary, tpr_binary, _ = metrics.roc_curve(gt, scores)
+fpr_binary, tpr_binary, thresholds = metrics.roc_curve(gt, scores)
 auc_roc_binary = metrics.auc(fpr_binary, tpr_binary)
 
 print(f'AUROC: {auc_roc_binary*100}')
+
+
+for i,j,k in zip(fpr_binary, tpr_binary, thresholds ):
+    print(i,j,k)
+
