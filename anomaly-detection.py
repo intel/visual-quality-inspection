@@ -56,7 +56,7 @@ sim_siam=True
 imagenet_mean = [0.485, 0.456, 0.406]
 imagenet_std = [0.229, 0.224, 0.225]
 im_size=224
-epochs = 50
+epochs = 1
 LR = 0.0171842137353148
 optimizer = 'SGD'
 category='hazelnut'
@@ -68,7 +68,7 @@ layer='layer3'
 pool=2
 pca_thresholds=0.99
 
-root_dir = r"/home/support/pratool/frameworks.ai.end2end-ai-pipelines.anomaly-detection/pretrained/datasets/mvtec/" #path for mvtec datasets
+root_dir = r"/DataDisk_4/pratool/dataset/" #path for mvtec datasets
 object_type = 'hazelnut'
 device = "cpu"
 num_workers=56
