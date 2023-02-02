@@ -312,6 +312,7 @@ def main():
                 # 'state_dict': model.encoder.state_dict(),
                 'optimizer' : optimizer.state_dict(),
             }, is_best=is_best_ans, filename='checkpoint_{:04d}.pth.tar'.format(epoch), epochs=epochs, category=category)
+            is_best_ans=False
         print('No. Of Epochs=', epochs)
         print('Batch Size =', batch_size_ss)
         # print('Training Loss =', _loss)
