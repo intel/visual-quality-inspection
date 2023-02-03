@@ -16,3 +16,5 @@
 
 2. Set category variable within MVTEC dataset, i.e. 'hazelnut'
 3. Execute "python anomaly-detection.py --simsiam --epochs 2" command
+
+
