@@ -63,7 +63,6 @@ sim_siam=False
 imagenet_mean = [0.485, 0.456, 0.406]
 imagenet_std = [0.229, 0.224, 0.225]
 im_size=224
-epochs = 1
 LR = 0.0171842137353148
 optimizer = 'SGD'
 category='hazelnut'
@@ -244,7 +243,7 @@ def adjust_learning_rate(optimizer, init_lr, epoch,epochs):
             param_group['lr'] = cur_lr
 
 
-def main():
+def main(args):
 
     print("Preparing Dataloader for Training Images \n")
 
@@ -255,7 +254,7 @@ def main():
     train_loader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
     test_loader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False,num_workers=num_workers)
 
-    if sim_siam:
+    if args.simsiam:
         dim=1000
         pred_dim=250
         print("=> creating SIMSIAM feature extractor with the backbone of'{}'".format(model_name))
@@ -301,8 +300,8 @@ def main():
 
         best_least_Loss = float('inf')
         is_best_ans = False
-        for epoch in range(0, epochs):
-            adjust_learning_rate(optimizer, init_lr, epoch,epochs)
+        for epoch in range(0, args.epochs):
+            adjust_learning_rate(optimizer, init_lr, epoch,args.epochs)
 
             # train for one epoch
             curr_loss = train(train_loader_ss, model, criterion, optimizer, epoch)
@@ -320,9 +319,9 @@ def main():
                 'state_dict': model.state_dict(),
                 # 'state_dict': model.encoder.state_dict(),
                 'optimizer' : optimizer.state_dict(),
-            }, is_best=is_best_ans, filename='checkpoint_{:04d}.pth.tar'.format(epoch), epochs=epochs, category=category)
+            }, is_best=is_best_ans, filename='checkpoint_{:04d}.pth.tar'.format(epoch), epochs=args.epochs, category=category)
             is_best_ans=False
-        print('No. Of Epochs=', epochs)
+        print('No. Of Epochs=', args.epochs)
         print('Batch Size =', batch_size_ss)
         # print('Training Loss =', _loss)
         # print(category)
@@ -333,7 +332,7 @@ def main():
         from collections import OrderedDict
 
         # original saved file with DataParallel
-        ckpt = torch.load(f'checkpoint_{epochs}_{category}.pth.tar',map_location=torch.device('cpu'))
+        ckpt = torch.load(f'checkpoint_{args.epochs}_{category}.pth.tar',map_location=torch.device('cpu'))
         state_dict = ckpt['state_dict']    # incase there are extra parameters in the model
         new_state_dict = OrderedDict()
 
@@ -350,9 +349,7 @@ def main():
         img_dir = os.path.join(root_dir, 'hazelnut')
         dataset = dataset_factory.load_dataset(img_dir, 
                                        use_case='image_anomaly_detection', 
-                                       framework="pytorch",
-                                       defects=['crack', 'hole']
-                                      )
+                                       framework="pytorch")
         dataset.preprocess(model.image_size, batch_size=batch_size, interpolation=InterpolationMode.LANCZOS)
         components = model.train(dataset, output_dir, layer_name=layer, pooling='avg', kernel_size=pool, pca_threshold=pca_thresholds)
 
@@ -466,13 +463,15 @@ def main():
 def args_parser():
     parser = argparse.ArgumentParser(description='PyTorch Anomaly Detection Training and Inference on MVTEC Dataset')
 
-    parser.add_argument('data', metavar='DIR',
-                        help='path to dataset')
-    parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet50',
-                        choices=model_names,
-                        help='model architecture: ' +
-                            ' | '.join(model_names) +
-                            ' (default: resnet50)')
+    parser.add_argument('--simsiam', action='store_true', default=False,
+                        help='flag to enable simsiam feature extractor')
+
+    parser.add_argument('--epochs', action='store', type=int,default=2,
+                        help='epochs to train simsiam feature extractor')
+
+    args = parser.parse_args()
+    return args
 
 if __name__ == '__main__':
-    main()
+    args=args_parser()
+    main(args)
