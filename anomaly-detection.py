@@ -4,6 +4,7 @@
 import os
 import sys
 sys.path.append(os.path.join(sys.path[0],'../..'))
+sys.path.append('../frameworks.ai.transfer-learning/')
 import torch
 import numpy as np
 import time
@@ -39,6 +40,11 @@ from torchvision.models import ResNet18_Weights, ResNet50_Weights, EfficientNet_
 from torchvision.models.feature_extraction import create_feature_extractor
 
 
+from tlt.datasets import dataset_factory
+from tlt.models import model_factory
+from tlt.utils.file_utils import download_and_extract_tar_file, download_file
+
+
 from sklearn import metrics
 from sklearn.decomposition import PCA
 
@@ -52,7 +58,8 @@ import simsiam.builder
 print("Setting required variables \n")
 
 model_name = 'resnet50'
-sim_siam=True
+
+sim_siam=False
 imagenet_mean = [0.485, 0.456, 0.406]
 imagenet_std = [0.229, 0.224, 0.225]
 im_size=224
@@ -69,9 +76,11 @@ pool=2
 pca_thresholds=0.99
 
 root_dir = r"/DataDisk_4/pratool/dataset/" #path for mvtec datasets
+output_dir = r"."
+
 object_type = 'hazelnut'
 device = "cpu"
-num_workers=56
+num_workers=224
 
 
 ###################################
@@ -336,10 +345,24 @@ def main():
         net.load_state_dict(new_state_dict, strict=False)
     else:
         print("Loading Backbone ResNet50 Model \n")
-        net = resnet50(weights=ResNet50_Weights.IMAGENET1K_V1)
+        # net = resnet50(weights=ResNet50_Weights.IMAGENET1K_V1)
+        model = model_factory.get_model(model_name=model_name, framework="pytorch", use_case='anomaly_detection')
+        img_dir = os.path.join(root_dir, 'hazelnut')
+        dataset = dataset_factory.load_dataset(img_dir, 
+                                       use_case='image_anomaly_detection', 
+                                       framework="pytorch",
+                                       defects=['crack', 'hole']
+                                      )
+        dataset.preprocess(model.image_size, batch_size=batch_size, interpolation=InterpolationMode.LANCZOS)
+        components = model.train(dataset, output_dir, layer_name=layer, pooling='avg', kernel_size=pool, pca_threshold=pca_thresholds)
+
+        exit()
+
+
 
     net = net.to(device)
     net.eval()
+
 
 
     ###################################
@@ -440,6 +463,16 @@ def main():
 
     print(f'AUROC: {auc_roc_binary*100}')
 
+def args_parser():
+    parser = argparse.ArgumentParser(description='PyTorch Anomaly Detection Training and Inference on MVTEC Dataset')
+
+    parser.add_argument('data', metavar='DIR',
+                        help='path to dataset')
+    parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet50',
+                        choices=model_names,
+                        help='model architecture: ' +
+                            ' | '.join(model_names) +
+                            ' (default: resnet50)')
 
 if __name__ == '__main__':
     main()
