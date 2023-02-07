@@ -38,10 +38,10 @@ layer='layer3'
 pool=2
 pca_thresholds=0.99
 
-root_dir = "/data/datah/pratool/pretrained/"
+root_dir = "/DataDisk_4/pratool/dataset/"
 object_type = 'hazelnut'
 device = "cpu"
-num_workers=56
+num_workers=112
 
 
 
@@ -236,6 +236,6 @@ auc_roc_binary = metrics.auc(fpr_binary, tpr_binary)
 print(f'AUROC: {auc_roc_binary*100}')
 
 
-for i,j,k in zip(fpr_binary, tpr_binary, thresholds ):
-    print(i,j,k)
+# for i,j,k in zip(fpr_binary, tpr_binary, thresholds ):
+#     print(i,j,k)
 

@@ -65,7 +65,7 @@ imagenet_std = [0.229, 0.224, 0.225]
 im_size=224
 LR = 0.0171842137353148
 optimizer = 'SGD'
-category='hazelnut'
+
 
 
 batch_size = 32
@@ -74,8 +74,6 @@ layer='layer3'
 pool=2
 pca_thresholds=0.99
 
-root_dir = r"/DataDisk_4/pratool/dataset/" #path for mvtec datasets
-output_dir = r"."
 
 object_type = 'hazelnut'
 device = "cpu"
@@ -247,13 +245,7 @@ def main(args):
 
     print("Preparing Dataloader for Training Images \n")
 
-    trainset = Mvtec(root_dir,object_type=object_type,split='train',im_size=im_size)
-    testset = Mvtec(root_dir,object_type=object_type,split='test',defect_type='all',im_size=im_size)
-
-    classes = trainset.getclasses()
-    train_loader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
-    test_loader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False,num_workers=num_workers)
-
+    output_dir="."
     if args.simsiam:
         dim=1000
         pred_dim=250
@@ -271,7 +263,7 @@ def main(args):
         optimizer = torch.optim.SGD(optim_params, init_lr,momentum=0.9,weight_decay=1e-4)
 
         # Training Data loading code
-        traindir_ss = os.path.join(root_dir, category,'train')
+        traindir_ss = os.path.join(args.path, args.category,'train')
         normalize = transforms.Normalize(mean=imagenet_mean,
                                          std=imagenet_std)
 
@@ -319,7 +311,7 @@ def main(args):
                 'state_dict': model.state_dict(),
                 # 'state_dict': model.encoder.state_dict(),
                 'optimizer' : optimizer.state_dict(),
-            }, is_best=is_best_ans, filename='checkpoint_{:04d}.pth.tar'.format(epoch), epochs=args.epochs, category=category)
+            }, is_best=is_best_ans, filename='checkpoint_{:04d}.pth.tar'.format(epoch), epochs=args.epochs, category=args.category)
             is_best_ans=False
         print('No. Of Epochs=', args.epochs)
         print('Batch Size =', batch_size_ss)
@@ -332,7 +324,7 @@ def main(args):
         from collections import OrderedDict
 
         # original saved file with DataParallel
-        ckpt = torch.load(f'checkpoint_{args.epochs}_{category}.pth.tar',map_location=torch.device('cpu'))
+        ckpt = torch.load(f'checkpoint_{args.epochs}_{args.category}.pth.tar',map_location=torch.device('cpu'))
         state_dict = ckpt['state_dict']    # incase there are extra parameters in the model
         new_state_dict = OrderedDict()
 
@@ -346,7 +338,7 @@ def main(args):
         print("Loading Backbone ResNet50 Model \n")
         # net = resnet50(weights=ResNet50_Weights.IMAGENET1K_V1)
         model = model_factory.get_model(model_name=model_name, framework="pytorch", use_case='anomaly_detection')
-        img_dir = os.path.join(root_dir, 'hazelnut')
+        img_dir = os.path.join(args.path, args.category)
         dataset = dataset_factory.load_dataset(img_dir, 
                                        use_case='image_anomaly_detection', 
                                        framework="pytorch")
@@ -360,7 +352,15 @@ def main(args):
     net = net.to(device)
     net.eval()
 
+    trainset = Mvtec(args.path,object_type=args.category,split='train',im_size=im_size)
+    testset = Mvtec(args.path,object_type=args.category,split='test',defect_type='all',im_size=im_size)
 
+    # trainset = torchvision.datasets.ImageFolder(root=os.path.join(args.path,args.category,'train'))
+    # testset = torchvision.datasets.ImageFolder(root=os.path.join(args.path,args.category,'test'))
+
+    # classes = trainset.getclasses()
+    train_loader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
+    test_loader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False,num_workers=num_workers)
 
     ###################################
     ### FEATURE EXTRACTION  ###########
@@ -466,8 +466,14 @@ def args_parser():
     parser.add_argument('--simsiam', action='store_true', default=False,
                         help='flag to enable simsiam feature extractor')
 
-    parser.add_argument('--epochs', action='store', type=int,default=2,
+    parser.add_argument('--epochs', action='store', type=int, default=2,
                         help='epochs to train simsiam feature extractor')
+
+    parser.add_argument('--path', action='store', type=str, required = True, default="",
+                        help='path for base dataset directory')
+
+    parser.add_argument('--category', action='store', type=str, default='hazelnut',
+                        help='category of the dataset, i.e. hazelnut')
 
     args = parser.parse_args()
     return args
