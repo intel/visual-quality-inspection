@@ -63,7 +63,7 @@ sim_siam=False
 imagenet_mean = [0.485, 0.456, 0.406]
 imagenet_std = [0.229, 0.224, 0.225]
 im_size=224
-LR = 0.0171842137353148
+LR = 0.00171842137353148
 optimizer = 'SGD'
 
 
@@ -320,6 +320,8 @@ def main(args):
 
 
         net = resnet50(pretrained=False)
+
+
         # create new OrderedDict that contains Only `Encoder Layers.`
         from collections import OrderedDict
 
@@ -328,12 +330,26 @@ def main(args):
         state_dict = ckpt['state_dict']    # incase there are extra parameters in the model
         new_state_dict = OrderedDict()
 
-        for k, v in state_dict.items():
-            if "encoder" in k:
-                name =  k.replace("module.encoder.","")
-                new_state_dict[name] = v
+        # for k, v in state_dict.items():
+        #     if "encoder" in k:
+        #         name =  k.replace("encoder.","")
+        #         new_state_dict[name] = v
+        # for k, v in new_state_dict.items():
+        #     print(k)
+
+        for k in list(state_dict.keys()):
+                # retain only encoder up to before the embedding layer
+                if k.startswith('encoder.') and not k.startswith('encoder.fc'):
+                    # remove prefix
+                    state_dict[k[len("encoder."):]] = state_dict[k]
+                # delete renamed or unused k
+                del state_dict[k]
+
         # load params
-        net.load_state_dict(new_state_dict, strict=False)
+        net.load_state_dict(state_dict, strict=False)
+
+
+
     else:
         print("Loading Backbone ResNet50 Model \n")
         # net = resnet50(weights=ResNet50_Weights.IMAGENET1K_V1)

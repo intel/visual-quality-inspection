@@ -23,6 +23,8 @@ from torch.utils.data import Dataset
 from torchvision.models.feature_extraction import create_feature_extractor
 import torch.nn.functional as F
 import torch.nn as nn
+from prettytable import PrettyTable
+
 
 ###################################
 ### SET VARIABLES  ################
@@ -41,7 +43,7 @@ pca_thresholds=0.99
 root_dir = "/DataDisk_4/pratool/dataset/"
 object_type = 'hazelnut'
 device = "cpu"
-num_workers=112
+num_workers=56
 
 
 
@@ -191,16 +193,37 @@ def print_results(file_names, scores, gt, threshold=-42):
     for file_name,score,ground_truth in zip(file_names,scores, gt):
         print("File Name", file_name, "Score", score, "Ground Truth", "Good" if ground_truth==1 else "Defect", "Prediction", "Good" if score > threshold else "Defect")
 
+def print_results_table(file_names, scores, gt, threshold=-42):
+    count=1
+    my_table = PrettyTable()
+    my_table.field_names = ["Seq. No.","Filename", "Ground Truth", "Prediction", "Score = Defect (< "+str(threshold)+")"]
+    for fns,scr,gts in zip(file_names,scores, gt):
+        for f,s,g in zip(fns,scr, gts):
+            s=s.item()
+            g=g.item()
+            path_split=f.split("/")
+            my_table.add_row([count,path_split[-2]+"/"+path_split[-1], 
+                "Good" if g==1 else "Defect",
+                "Good" if s > threshold else "Defect",
+                np.round(s,2)])
+            count+=1
+    print(my_table)
+    return my_table
+
+
 demoset = Mvtec(root_dir,object_type=object_type,split='test',defect_type='demo',im_size=im_size)
 demo_loader = torch.utils.data.DataLoader(demoset, batch_size=14, shuffle=False,num_workers=num_workers)
 
 
 with torch.no_grad():
-    len_dataset = len(demo_loader.dataset)
+    len_dataset = len(test_loader.dataset)
     gt = torch.zeros(len_dataset)
     scores = np.empty(len_dataset)
     count = 0
-    for k, data in enumerate(tqdm(demo_loader)):
+    fnames=[]
+    scores_list=[] 
+    gtruths=[]   
+    for k, data in enumerate(tqdm(test_loader)):
 
         inputs = data['data'].to(memory_format=torch.channels_last)
         labels = data['label']
@@ -223,8 +246,12 @@ with torch.no_grad():
 
         gt[count:count + num_im] = labels
         count += num_im
-        print_results(file_names, scores, gt, threshold=-42)
+        fnames.append(file_names)
+        gtruths.append(labels)
+        scores_list.append(-fre_score)
     gt = gt.numpy()
+
+print_results_table(fnames, scores_list, gtruths, threshold=-42)
 
 ###################################
 ### AUROC SCORE for Evaluation  ###
@@ -236,6 +263,6 @@ auc_roc_binary = metrics.auc(fpr_binary, tpr_binary)
 print(f'AUROC: {auc_roc_binary*100}')
 
 
-# for i,j,k in zip(fpr_binary, tpr_binary, thresholds ):
-#     print(i,j,k)
+for i,j,k in zip(fpr_binary, tpr_binary, thresholds ):
+    print(i,j,k)
 
