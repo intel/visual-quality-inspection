@@ -20,6 +20,7 @@ import random
 import shutil
 import warnings
 warnings.filterwarnings("ignore")
+from prettytable import PrettyTable
 
 import torch
 import torch.nn as nn
@@ -215,7 +216,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
-
+        print(i,print_freq)
         if i % print_freq == 0:
             curr_loss = progress.display(i)
     return curr_loss
@@ -287,7 +288,7 @@ def main(args):
         train_sampler = None
         train_loader_ss = torch.utils.data.DataLoader(
             train_dataset_ss, batch_size=batch_size_ss, shuffle=(train_sampler is None),
-            num_workers=num_workers, pin_memory=True, sampler=train_sampler, drop_last=True)
+            num_workers=num_workers, pin_memory=True, sampler=train_sampler, drop_last=False)
 
 
         best_least_Loss = float('inf')
@@ -352,16 +353,16 @@ def main(args):
 
     else:
         print("Loading Backbone ResNet50 Model \n")
-        # net = resnet50(weights=ResNet50_Weights.IMAGENET1K_V1)
-        model = model_factory.get_model(model_name=model_name, framework="pytorch", use_case='anomaly_detection')
-        img_dir = os.path.join(args.path, args.category)
-        dataset = dataset_factory.load_dataset(img_dir, 
-                                       use_case='image_anomaly_detection', 
-                                       framework="pytorch")
-        dataset.preprocess(model.image_size, batch_size=batch_size, interpolation=InterpolationMode.LANCZOS)
-        components = model.train(dataset, output_dir, layer_name=layer, pooling='avg', kernel_size=pool, pca_threshold=pca_thresholds)
+        net = resnet50(weights=ResNet50_Weights.IMAGENET1K_V1)
+        # model = model_factory.get_model(model_name=model_name, framework="pytorch", use_case='anomaly_detection')
+        # img_dir = os.path.join(args.path, args.category)
+        # dataset = dataset_factory.load_dataset(img_dir, 
+        #                                use_case='image_anomaly_detection', 
+        #                                framework="pytorch")
+        # dataset.preprocess(model.image_size, batch_size=batch_size, interpolation=InterpolationMode.LANCZOS)
+        # components = model.train(dataset, output_dir, layer_name=layer, pooling='avg', kernel_size=pool, pca_threshold=pca_thresholds)
 
-        exit()
+        # return
 
 
 
@@ -475,6 +476,19 @@ def main(args):
     auc_roc_binary = metrics.auc(fpr_binary, tpr_binary)
 
     print(f'AUROC: {auc_roc_binary*100}')
+    return len_dataset, auc_roc_binary*100
+
+
+def print_datasets_results(results):
+    count=1
+    my_table = PrettyTable()
+    my_table.field_names = ["Seq. No.","Dataset", "Test set (size)", "AUROC"]
+    for result in results:
+        category, len_inference_data, auroc = result[0],result[1],result[2]
+        my_table.add_row([count,category.upper(), len_inference_data, np.round(auroc,2)])
+        count+=1
+    return my_table
+
 
 def args_parser():
     parser = argparse.ArgumentParser(description='PyTorch Anomaly Detection Training and Inference on MVTEC Dataset')
@@ -496,4 +510,20 @@ def args_parser():
 
 if __name__ == '__main__':
     args=args_parser()
-    main(args)
+    d=args.path
+    if args.path:
+        all_categories = [os.path.join(d, o).split('/')[-1] for o in os.listdir(d) if os.path.isdir(os.path.join(d,o))]
+        all_categories.sort()
+        if args.category == 'all':
+            results=[]
+            for category in all_categories:
+                print("\n#### Processing "+category.upper()+ " dataset started ##########\n")
+                args.category = category
+                len_inference_data,auroc = main(args)
+                results.append([category,len_inference_data,auroc])
+                print("\n#### Processing "+category.upper()+ " dataset completed ########\n")
+            print(print_datasets_results(results))
+        else:
+            import pdb
+            breakpoint()
+            main(args)
