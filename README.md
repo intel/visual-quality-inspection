@@ -25,21 +25,21 @@
 2. Execute "python anomaly-detection.py" command
 
 Optional arguments:
-  -h, --help           show this help message and exit
-  --simsiam            flag to enable simsiam feature extractor
-  --epochs EPOCHS      number of epochs to train SimSiam feature extractor
-  --path PATH          path for MVTEC base dataset directory, i.e. /path/to/mvtec/
-  --category CATEGORY  category of the dataset, i.e. hazelnut or all
+  -h, --help           show this help message and exit  
+  --simsiam            flag to enable simsiam feature extractor  
+  --epochs EPOCHS      number of epochs to train SimSiam feature extractor  
+  --path PATH          path for MVTEC base dataset directory, i.e. /path/to/mvtec/  
+  --category CATEGORY  category of the dataset, i.e. hazelnut or all  
 
-3. To enable SimSiam feature extractor, use --simsiam flag. Deafult is imagenet trained ResNet50 feature extractor
-4. To change the dataset, pass category variable to --category. To run all category at once, pass --category all
-5. If SimSiam feature extractor is selected, pass --epochs, number of epochs for fine-tuning.
+3. To enable SimSiam feature extractor, use --simsiam flag. Deafult is imagenet trained ResNet50 feature extractor    
+4. To change the dataset, pass category variable to --category. To run all category at once, pass --category all  
+5. If SimSiam feature extractor is selected, pass --epochs, number of epochs for fine-tuning.  
 
 
 
 ## To run the demo ---
-1. Add hazelnut_demo.csv in hazelnut directory
-2. Execute "Python anomaly_detection_demo.py"
+1. Add hazelnut_demo.csv in hazelnut directory  
+2. Execute "Python anomaly_detection_demo.py"  
 
 
 
