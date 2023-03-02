@@ -354,15 +354,15 @@ def main(args):
     else:
         print("Loading Backbone ResNet50 Model \n")
         net = resnet50(weights=ResNet50_Weights.IMAGENET1K_V1)
-        # model = model_factory.get_model(model_name=model_name, framework="pytorch", use_case='anomaly_detection')
-        # img_dir = os.path.join(args.path, args.category)
-        # dataset = dataset_factory.load_dataset(img_dir, 
-        #                                use_case='image_anomaly_detection', 
-        #                                framework="pytorch")
-        # dataset.preprocess(model.image_size, batch_size=batch_size, interpolation=InterpolationMode.LANCZOS)
-        # components = model.train(dataset, output_dir, layer_name=layer, pooling='avg', kernel_size=pool, pca_threshold=pca_thresholds)
+        model = model_factory.get_model(model_name=model_name, framework="pytorch", use_case='anomaly_detection')
+        img_dir = os.path.join(args.path, args.category)
+        dataset = dataset_factory.load_dataset(img_dir, 
+                                       use_case='image_anomaly_detection', 
+                                       framework="pytorch")
+        dataset.preprocess(model.image_size, batch_size=batch_size, interpolation=InterpolationMode.LANCZOS)
+        components = model.train(dataset, output_dir, layer_name=layer, pooling='avg', kernel_size=pool, pca_threshold=pca_thresholds)
 
-        # return
+        return
 
 
 
