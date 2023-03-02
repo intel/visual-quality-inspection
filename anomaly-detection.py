@@ -4,7 +4,7 @@
 import os
 import sys
 sys.path.append(os.path.join(sys.path[0],'../..'))
-sys.path.append('../frameworks.ai.transfer-learning/')
+sys.path.append('frameworks.ai.transfer-learning/')
 import torch
 import numpy as np
 import time
