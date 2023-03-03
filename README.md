@@ -35,19 +35,20 @@
 ### 5. Setup the feature extractor
 
    We have three feature extractor options.
-
+   ```
    First - SimSiam - A self-supervised method that takes ResNet50 model as backbone and fine-tune the model on custom dataset to get better feature embedding
-
+   ```
    Download the Sim-Siam weights based on ResNet50 model and place under simsiam directory
    ```
    https://dl.fbaipublicfiles.com/simsiam/models/100ep-256bs/pretrain/checkpoint_0099.pth.tar
    mv checkpoint_0099.pth.tar simsiam
    ```
-
+   ```
    Second - Cut-paste - A self-supervised method that takes ResNet50/ ResNet18 model as backbone and fine-tune the model on custom dataset to get better feature embedding
-
+   ```
+   ```
    Third - No fine-tuning and just use pretrained ResNet50/ResNet18 model for feature extraction
-
+   ```
 ### 6. Running the workload
 
    ```
@@ -56,7 +57,7 @@
    Optional arguments:
      -h, --help           show this help message and exit  
      --simsiam            flag to fine-tune simsiam feature extractor  
-     --cutpaste           flag to fne-tune cutpaste feature extractor
+     --cutpaste           flag to fine-tune cutpaste feature extractor
      --freeze_resnet      number of epochs until cutpaste backbone ResNet layers will be frozen and only head layers will be trained
      --cutpaste_type      options for cutpaste augmentations {normal,scar,3way,union - default is normal} 
      --head_layer         number of fully connected layers following ResNet backbone in cutpaste
