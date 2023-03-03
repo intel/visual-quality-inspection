@@ -21,6 +21,9 @@ import shutil
 import warnings
 warnings.filterwarnings("ignore")
 from prettytable import PrettyTable
+import datetime
+from collections import OrderedDict
+from pathlib import Path
 
 import torch
 import torch.nn as nn
@@ -28,6 +31,7 @@ import torch.nn.functional as F
 
 import torch.optim
 import torch.optim.lr_scheduler as lr_scheduler
+
 import torch.utils.data
 from torch.utils.data import Dataset
 
@@ -41,146 +45,44 @@ from torchvision.models import ResNet18_Weights, ResNet50_Weights, EfficientNet_
 from torchvision.models.feature_extraction import create_feature_extractor
 
 
-from tlt.datasets import dataset_factory
-from tlt.models import model_factory
-from tlt.utils.file_utils import download_and_extract_tar_file, download_file
+# from tlt.datasets import dataset_factory
+# from tlt.models import model_factory
+# from tlt.utils.file_utils import download_and_extract_tar_file, download_file
 
 
 from sklearn import metrics
 from sklearn.decomposition import PCA
 
+from dataset import Mvtec, Repeat
+from utils import AverageMeter, ProgressMeter
 import simsiam.loader
 import simsiam.builder
 
+from cutpaste.model import ProjectionNet
+from cutpaste.cutpaste import CutPasteNormal,CutPasteScar, CutPaste3Way, CutPasteUnion, cut_paste_collate_fn, get_cutpaste_transforms
+
+from sklearnex import patch_sklearn
+patch_sklearn()
 
 ###################################
 ### SET VARIABLES  ################
 ###################################
 print("Setting required variables \n")
 
-model_name = 'resnet50'
+LR = 0.171842137353148
 
-sim_siam=False
 imagenet_mean = [0.485, 0.456, 0.406]
 imagenet_std = [0.229, 0.224, 0.225]
-im_size=224
-LR = 0.00171842137353148
-optimizer = 'SGD'
-
-
 
 batch_size = 32
 batch_size_ss = 64
 layer='layer3'
 pool=2
 pca_thresholds=0.99
-
-
-object_type = 'hazelnut'
 device = "cpu"
-num_workers=224
 
 
-###################################
-### LOAD DATASET  ################
-###################################
-
-class Mvtec(Dataset):
-    def __init__(self, root_dir, object_type=None, split=None, defect_type=None, im_size=None, transform=None):
-        
-        if split == 'train':
-            # defect_type = 'good'
-            csv_name = '{}_train.csv'.format(object_type)
-        else:
-            csv_name = '{}_{}.csv'.format(object_type, defect_type)
-
-        csv_file = os.path.join(root_dir, object_type, csv_name)
-        # self.image_folder = os.path.join(root_dir, object_type, split, defect_type)
-        self.data_frame = pd.read_csv(csv_file)
-        self.image_dir = os.path.join(root_dir, object_type)
-        if transform:
-            self.transform = transform
-        else:
-            self.im_size = (224, 224) if im_size is None else (im_size, im_size)
-            normalize_tf = transforms.Normalize(mean=imagenet_mean, std=imagenet_std)
-            self.transform = transforms.Compose([transforms.Resize(tuple(self.im_size), interpolation=InterpolationMode.LANCZOS), transforms.ToTensor(), normalize_tf])
-        self.num_classes = 1
-
-
-    def __len__(self):
-        return len(self.data_frame)
-
-    def __getitem__(self, idx):
-        img_name = os.path.join(self.image_dir, self.data_frame.iloc[idx, 0])
-        image = Image.open(img_name)
-        if image.mode == 'L':
-            image = image.convert('RGB')
-        image = self.transform(image)
-        labels = self.data_frame.iloc[idx, 1]
-        sample = {'data': image, 'label': labels}
-
-        return sample
-
-    def getclasses(self):
-        classes = [str(i) for i in range(self.num_classes)]
-        c = dict()
-        for i in range(len(classes)):
-            c[i] = classes[i]
-        return c
-
-
-###################################
-### SIMSIAM MODULES ###############
-###################################
-class AverageMeter(object):
-    """Computes and stores the average and current value"""
-    def __init__(self, name, fmt=':f'):
-        self.name = name
-        self.fmt = fmt
-        self.reset()
-
-    def reset(self):
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
-        self.count = 0
-
-    def update(self, val, n=1):
-        self.val = val
-        self.sum += val * n
-        self.count += n
-        self.avg = self.sum / self.count
-
-    def __str__(self):
-        fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
-        return fmtstr.format(**self.__dict__)
-
-
-class ProgressMeter(object):
-    def __init__(self, num_batches, meters, prefix=""):
-        self.batch_fmtstr = self._get_batch_fmtstr(num_batches)
-        self.meters = meters
-        self.prefix = prefix
-
-    def display(self, batch):
-        # global iii
-        entries = [self.prefix + self.batch_fmtstr.format(batch)]
-        entries += [str(meter) for meter in self.meters]
-        print('\t'.join(entries))
-        # _epochs.append(iii)
-        curr_loss = float(entries[-1].split()[-1][1:-1])
-        # _loss.append(curr_loss)
-        # iii += 1
-        return curr_loss
-
-
-    def _get_batch_fmtstr(self, num_batches):
-        num_digits = len(str(num_batches // 1))
-        fmt = '{:' + str(num_digits) + 'd}'
-        return '[' + fmt + '/' + fmt.format(num_batches) + ']'
-
-
-def train(train_loader, model, criterion, optimizer, epoch):
+def train_simsiam(train_loader, model, criterion, optimizer, epoch):
     print_freq=1
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
@@ -216,21 +118,64 @@ def train(train_loader, model, criterion, optimizer, epoch):
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
-        print(i,print_freq)
+        # print(i,print_freq)
         if i % print_freq == 0:
             curr_loss = progress.display(i)
     return curr_loss
 
+def train_cutpaste(dataloader, model, criterion, optimizer, epoch,scheduler):
+    print_freq=1
+    batch_time = AverageMeter('Time', ':6.3f')
+    data_time = AverageMeter('Data', ':6.3f')
+    losses = AverageMeter('Loss', ':.4f')
+    progress = ProgressMeter(
+        len(dataloader),
+        [batch_time, data_time, losses],
+        prefix="Epoch: [{}]".format(epoch))
 
-def save_checkpoint(state, is_best, filename, epochs, category):
-    torch.save(state, filename)
+    # switch to train mode
+    model.train()
+
+    if epoch == args.freeze_resnet:
+                model.unfreeze()
+
+    end = time.time()
+    for i, data in enumerate(dataloader):
+        # measure data loading time
+        data_time.update(time.time() - end)
+    
+        xs = [x.to(device) for x in data['data']]
+
+        # zero the parameter gradients
+        optimizer.zero_grad()
+
+        xc = torch.cat(xs, axis=0)
+        embeds, logits = model(xc)
+        
+        # calculate label
+        y = torch.arange(len(xs), device=device)
+        y = y.repeat_interleave(xs[0].size(0))
+        loss = criterion(logits, y) 
+        
+        losses.update(loss.item(), len(data['data']))
+
+        # regulize weights:
+        loss.backward()
+        optimizer.step()
+        batch_time.update(time.time() - end)
+        end = time.time()
+
+        if scheduler is not None:
+            scheduler.step(epoch)
+        if i % print_freq == 0:
+            curr_loss = progress.display(i)
+    return curr_loss
+
+def save_checkpoint(state, is_best, filename, loss):
     if is_best:
-        # print("Best Is == >", filename)
-        ## To Replace with Best Model
-        os.rename(filename, f'checkpoint_{epochs}_{category}.pth.tar')
-        ## To Keep copies of older models
-        # shutil.copyfile(filename, f'checkpoint_{epochs}_{category}.pth.tar')
-    return filename
+        Path("./models/").mkdir(parents=True, exist_ok=True)
+        print("Saving a new checkpoint with loss ",loss, " at path ", "./models/"+filename)
+        torch.save(state, "./models/"+filename)
 
 def adjust_learning_rate(optimizer, init_lr, epoch,epochs):
     """Decay the learning rate based on schedule"""
@@ -241,18 +186,42 @@ def adjust_learning_rate(optimizer, init_lr, epoch,epochs):
         else:
             param_group['lr'] = cur_lr
 
+def load_checkpoint_weights(args,filename, feature_extractor=None):
+    if args.model == 'resnet50':
+        net = resnet50(pretrained=False)
+    else:
+        net = resnet18(pretrained=False)
+
+    # original saved file with DataParallel
+    ckpt = torch.load("./models/"+filename,map_location=torch.device('cpu'))
+    state_dict = ckpt['state_dict']    # incase there are extra parameters in the model
+    new_state_dict = OrderedDict()
+
+    if feature_extractor == 'simsiam':
+        for k in list(state_dict.keys()):
+            # retain only encoder up to before the embedding layer
+            if k.startswith('encoder.') and not k.startswith('encoder.fc'):
+                # remove prefix
+                state_dict[k[len("encoder."):]] = state_dict[k]
+            # delete renamed or unused k
+            del state_dict[k]
+    # elif feature_extractor == 'cutpaste':
+    #     for k in list(state_dict.keys()):
+    #         # delete all the head layers attached
+    #         if not k.startswith('model'):
+    #             del state_dict[k]
+    # load params
+    net.load_state_dict(state_dict, strict=False)
+    return net
 
 def main(args):
 
-    print("Preparing Dataloader for Training Images \n")
-
-    output_dir="."
     if args.simsiam:
         dim=1000
         pred_dim=250
-        print("=> creating SIMSIAM feature extractor with the backbone of'{}'".format(model_name))
+        print("=> creating SIMSIAM feature extractor with the backbone of'{}'".format(args.model))
         model = simsiam.builder.SimSiam(
-            models.__dict__[model_name],dim, pred_dim)
+            models.__dict__[args.model],dim, pred_dim)
 
         # infer learning rate before changing batch size
         init_lr = LR * batch_size / 256
@@ -264,7 +233,7 @@ def main(args):
         optimizer = torch.optim.SGD(optim_params, init_lr,momentum=0.9,weight_decay=1e-4)
 
         # Training Data loading code
-        traindir_ss = os.path.join(args.path, args.category,'train')
+        traindir_ss = os.path.join(args.data, args.category,'train')
         normalize = transforms.Normalize(mean=imagenet_mean,
                                          std=imagenet_std)
 
@@ -288,68 +257,103 @@ def main(args):
         train_sampler = None
         train_loader_ss = torch.utils.data.DataLoader(
             train_dataset_ss, batch_size=batch_size_ss, shuffle=(train_sampler is None),
-            num_workers=num_workers, pin_memory=True, sampler=train_sampler, drop_last=False)
+            num_workers=args.workers, pin_memory=True, sampler=train_sampler, drop_last=False)
 
 
         best_least_Loss = float('inf')
         is_best_ans = False
+        file_name_least_loss=""
+        print("Fine-tuning SIMSIAM Model on ", args.epochs, "epochs using ", len(train_loader_ss), " training images")
         for epoch in range(0, args.epochs):
             adjust_learning_rate(optimizer, init_lr, epoch,args.epochs)
 
             # train for one epoch
-            curr_loss = train(train_loader_ss, model, criterion, optimizer, epoch)
+            curr_loss = train_simsiam(train_loader_ss, model, criterion, optimizer, epoch)
 
             if (curr_loss < best_least_Loss):
                 best_least_Loss = curr_loss
                 is_best_ans = True
+                file_name_least_loss = 'simsiam-checkpoint_{:04d}.pth.tar'.format(epoch)
             
             ## Saves the Best Intermediate Checkpoints got till this step.
-            # if not args.multiprocessing_distributed or (args.multiprocessing_distributed
-            #         and args.rank % ngpus_per_node == 0):
             save_checkpoint({
                 'epoch': epoch + 1,
-                'arch': model_name,
+                'arch': args.model,
                 'state_dict': model.state_dict(),
                 # 'state_dict': model.encoder.state_dict(),
                 'optimizer' : optimizer.state_dict(),
-            }, is_best=is_best_ans, filename='checkpoint_{:04d}.pth.tar'.format(epoch), epochs=args.epochs, category=args.category)
+            }, is_best=is_best_ans, filename=file_name_least_loss , loss=best_least_Loss)
             is_best_ans=False
         print('No. Of Epochs=', args.epochs)
         print('Batch Size =', batch_size_ss)
         # print('Training Loss =', _loss)
         # print(category)
 
+        net= load_checkpoint_weights(args,file_name_least_loss, feature_extractor='simsiam')
 
-        net = resnet50(pretrained=False)
+    elif args.cutpaste:
+        print("=> creating CUT-PASTE feature extractor with the backbone of'{}'".format(args.model))
 
+        weight_decay = 0.00003
+        momentum = 0.9
 
-        # create new OrderedDict that contains Only `Encoder Layers.`
-        from collections import OrderedDict
+        variant_map = {'normal':CutPasteNormal, 'scar':CutPasteScar, '3way':CutPaste3Way, 'union':CutPasteUnion}
+        variant = variant_map[args.cutpaste_type]
 
-        # original saved file with DataParallel
-        ckpt = torch.load(f'checkpoint_{args.epochs}_{args.category}.pth.tar',map_location=torch.device('cpu'))
-        state_dict = ckpt['state_dict']    # incase there are extra parameters in the model
-        new_state_dict = OrderedDict()
+        #augmentation:
+        min_scale = 1
 
-        # for k, v in state_dict.items():
-        #     if "encoder" in k:
-        #         name =  k.replace("encoder.","")
-        #         new_state_dict[name] = v
-        # for k, v in new_state_dict.items():
-        #     print(k)
+        train_data = Mvtec(args.data, args.category, split='train',im_size=int(args.image_size * (1/min_scale)),transform = get_cutpaste_transforms(args.image_size,variant))
+        dataloader = torch.utils.data.DataLoader(train_data, batch_size=args.batch_size, drop_last=False,
+                                shuffle=True, num_workers=args.workers,# collate_fn=cut_paste_collate_fn,
+                                persistent_workers=True, pin_memory=True, prefetch_factor=5)
 
-        for k in list(state_dict.keys()):
-                # retain only encoder up to before the embedding layer
-                if k.startswith('encoder.') and not k.startswith('encoder.fc'):
-                    # remove prefix
-                    state_dict[k[len("encoder."):]] = state_dict[k]
-                # delete renamed or unused k
-                del state_dict[k]
+        # create Model:
+        head_layers = [512]*args.head_layer+[128]
+        num_classes = 2 if variant is not CutPaste3Way else 3
+        model = ProjectionNet(model_name=args.model,pretrained=True, head_layers=head_layers, num_classes=num_classes)
+        model.to(device)
 
-        # load params
-        net.load_state_dict(state_dict, strict=False)
+        if args.freeze_resnet > 0:
+            model.freeze_resnet()
 
+        criterion = torch.nn.CrossEntropyLoss()
+        if args.optim == "sgd":
+            optimizer = torch.optim.SGD(model.parameters(), lr=0.03, momentum=momentum,  weight_decay=weight_decay)
+            scheduler = lr_scheduler.CosineAnnealingWarmRestarts(optimizer, args.epochs)
+            #scheduler = None
+        elif args.optim == "adam":
+            optimizer = torch.optim.Adam(model.parameters(), lr=0.03, weight_decay=weight_decay)
+            scheduler = None
+        else:
+            print(f"ERROR unkown optimizer: {optim_name}")
 
+        num_batches = len(dataloader)
+       
+        best_least_Loss = float('inf')
+        is_best_ans = False
+        file_name_least_loss = ""
+        print("Fine-tuning CUT-PASTE Model on ", args.epochs, "epochs using ", len(train_data), " training images")
+        for step in range(args.epochs):
+            epoch = int(step / 1)
+            
+            curr_loss = train_cutpaste(dataloader, model, criterion, optimizer, epoch,scheduler)
+
+            if (curr_loss < best_least_Loss):
+                best_least_Loss = curr_loss
+                is_best_ans = True
+                file_name_least_loss = 'cutpaste_checkpoint_{:04d}.pth.tar'.format(step)
+            
+            ## Saves the Best Intermediate Checkpoints got till this step.
+            save_checkpoint({
+                'epoch': step + 1,
+                'arch': args.model,
+                'state_dict': model.state_dict(),
+                # 'state_dict': model.encoder.state_dict(),
+                'optimizer' : optimizer.state_dict(),
+            }, is_best=is_best_ans, filename=file_name_least_loss, loss=best_least_Loss)
+            is_best_ans=False
+        net= load_checkpoint_weights(args,file_name_least_loss, feature_extractor='cutpaste')
 
     else:
         print("Loading Backbone ResNet50 Model \n")
@@ -359,8 +363,8 @@ def main(args):
         dataset = dataset_factory.load_dataset(img_dir, 
                                        use_case='image_anomaly_detection', 
                                        framework="pytorch")
-        dataset.preprocess(model.image_size, batch_size=batch_size, interpolation=InterpolationMode.LANCZOS)
-        components = model.train(dataset, output_dir, layer_name=layer, pooling='avg', kernel_size=pool, pca_threshold=pca_thresholds)
+        dataset.preprocess(model.image_size, batch_size=args.batch_size, interpolation=InterpolationMode.LANCZOS)
+        components = model.train(dataset,'.', layer_name=layer, pooling='avg', kernel_size=pool, pca_threshold=pca_thresholds)
 
         return
 
@@ -369,15 +373,11 @@ def main(args):
     net = net.to(device)
     net.eval()
 
-    trainset = Mvtec(args.path,object_type=args.category,split='train',im_size=im_size)
-    testset = Mvtec(args.path,object_type=args.category,split='test',defect_type='all',im_size=im_size)
+    trainset = Mvtec(args.data,object_type=args.category,split='train',im_size=args.image_size)
+    testset = Mvtec(args.data,object_type=args.category,split='test',defect_type='all',im_size=args.image_size)
 
-    # trainset = torchvision.datasets.ImageFolder(root=os.path.join(args.path,args.category,'train'))
-    # testset = torchvision.datasets.ImageFolder(root=os.path.join(args.path,args.category,'test'))
-
-    # classes = trainset.getclasses()
-    train_loader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
-    test_loader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False,num_workers=num_workers)
+    train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=False, num_workers=args.workers)
+    test_loader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=False,num_workers=args.workers)
 
     ###################################
     ### FEATURE EXTRACTION  ###########
@@ -493,25 +493,50 @@ def print_datasets_results(results):
 def args_parser():
     parser = argparse.ArgumentParser(description='PyTorch Anomaly Detection Training and Inference on MVTEC Dataset')
 
+    parser.add_argument('--model', default="resnet50", choices=['resnet18','resnet50'], 
+                        help='Backbone architecture for sim-siam and cut-paste feature extractor')
+
     parser.add_argument('--simsiam', action='store_true', default=False,
                         help='flag to enable simsiam feature extractor')
 
-    parser.add_argument('--epochs', action='store', type=int, default=2,
-                        help='epochs to train simsiam feature extractor')
+    parser.add_argument('--cutpaste', action='store_true', default=False,
+                        help='flag to enable cut-paste feature extractor')
 
-    parser.add_argument('--path', action='store', type=str, required = True, default="",
+    parser.add_argument('--image_size', action='store', type=int, default=224,
+                        help='image size')
+
+    parser.add_argument('--epochs', action='store', type=int, default=2,
+                        help='epochs to train feature extractor')
+
+    parser.add_argument('--batch_size', action='store', type=int, default=64,
+                        help='batch size for every forward opeartion')
+
+    parser.add_argument('--optim', action='store', type=str, default='sgd',
+                        help='Name of optimizer - sgd/adam')
+
+    parser.add_argument('--data', action='store', type=str, required = True, default="",
                         help='path for base dataset directory')
 
     parser.add_argument('--category', action='store', type=str, default='hazelnut',
                         help='category of the dataset, i.e. hazelnut')
+
+    parser.add_argument('--freeze_resnet', action='store',  type=int, default=20,
+                        help='Epochs upto you want to freeze ResNet layers and only train the new header with FC layers')
+
+    parser.add_argument('--cutpaste_type', default="normal", choices=['normal', 'scar', '3way', 'union'], help='cutpaste variant to use (dafault: "normal")')
+
+    parser.add_argument('--head_layer', default=2, type=int,
+                    help='number of layers in the projection head (default: 1)')
+    
+    parser.add_argument('--workers', default=56, type=int, help="number of workers to use for data loading (default:56)")
 
     args = parser.parse_args()
     return args
 
 if __name__ == '__main__':
     args=args_parser()
-    d=args.path
-    if args.path:
+    d=args.data
+    if args.data:
         all_categories = [os.path.join(d, o).split('/')[-1] for o in os.listdir(d) if os.path.isdir(os.path.join(d,o))]
         all_categories.sort()
         if args.category == 'all':
@@ -524,6 +549,6 @@ if __name__ == '__main__':
                 print("\n#### Processing "+category.upper()+ " dataset completed ########\n")
             print(print_datasets_results(results))
         else:
-            import pdb
-            breakpoint()
+            # import pdb
+            # breakpoint()
             main(args)

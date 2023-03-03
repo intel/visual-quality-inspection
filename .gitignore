@@ -1,5 +1,6 @@
 *.log
 *.pth.tar
 **/__pycache__/
+**/models/
 test.py
 archive.zip
