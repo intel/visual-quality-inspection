@@ -1,5 +1,6 @@
 from PIL import ImageFilter
 import random
+import torchvision.transforms as transforms
 
 
 class TwoCropsTransform:
@@ -25,4 +26,22 @@ class GaussianBlur(object):
         x = x.filter(ImageFilter.GaussianBlur(radius=sigma))
         return x
 
-        
+def get_simsiam_augmentation():
+    # MoCo v2's aug: similar to SimCLR https://arxiv.org/abs/2002.05709
+    imagenet_mean = [0.485, 0.456, 0.406]
+    imagenet_std = [0.229, 0.224, 0.225]
+    normalize = transforms.Normalize(mean=imagenet_mean,
+                                         std=imagenet_std)
+    augmentation = [
+        transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
+        transforms.RandomApply([
+            transforms.ColorJitter(0.1, 0.1, 0.1, 0.1)  # not strengthened
+        ], p=0.8),
+        transforms.RandomGrayscale(p=0.2),
+        transforms.RandomApply([GaussianBlur([.1, 2.])], p=0.5),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        normalize
+    ]
+
+    return augmentation

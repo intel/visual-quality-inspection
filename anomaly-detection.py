@@ -44,10 +44,11 @@ from torchvision.models import resnet18, resnet50, efficientnet_b5
 from torchvision.models import ResNet18_Weights, ResNet50_Weights, EfficientNet_B5_Weights
 from torchvision.models.feature_extraction import create_feature_extractor
 
+import intel_extension_for_pytorch as ipex
 
-# from tlt.datasets import dataset_factory
-# from tlt.models import model_factory
-# from tlt.utils.file_utils import download_and_extract_tar_file, download_file
+from tlt.datasets import dataset_factory
+from tlt.models import model_factory
+from tlt.utils.file_utils import download_and_extract_tar_file, download_file
 
 
 from sklearn import metrics
@@ -81,6 +82,9 @@ pool=2
 pca_thresholds=0.99
 device = "cpu"
 
+###################################
+### TRAINING SIMSIAM  #############
+###################################
 
 def train_simsiam(train_loader, model, criterion, optimizer, epoch):
     print_freq=1
@@ -92,14 +96,10 @@ def train_simsiam(train_loader, model, criterion, optimizer, epoch):
         [batch_time, data_time, losses],
         prefix="Epoch: [{}]".format(epoch))
 
-    # switch to train mode
-    model.train()
-
     end = time.time()
-    for i, (images, _) in enumerate(train_loader):
+    for i, (images,_) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
-
         # if args.gpu is not None:
         images[0] = images[0].to('cpu')
         images[1] = images[1].to('cpu')
@@ -123,6 +123,9 @@ def train_simsiam(train_loader, model, criterion, optimizer, epoch):
             curr_loss = progress.display(i)
     return curr_loss
 
+###################################
+### TRAINING CUTPASTE  ############
+###################################
 def train_cutpaste(dataloader, model, criterion, optimizer, epoch,scheduler):
     print_freq=1
     batch_time = AverageMeter('Time', ':6.3f')
@@ -134,7 +137,8 @@ def train_cutpaste(dataloader, model, criterion, optimizer, epoch,scheduler):
         prefix="Epoch: [{}]".format(epoch))
 
     # switch to train mode
-    model.train()
+    # model.train()
+    # # model, optimizer = ipex.optimize(model, optimizer=optimizer)
 
     if epoch == args.freeze_resnet:
                 model.unfreeze()
@@ -205,14 +209,34 @@ def load_checkpoint_weights(args,filename, feature_extractor=None):
                 state_dict[k[len("encoder."):]] = state_dict[k]
             # delete renamed or unused k
             del state_dict[k]
-    # elif feature_extractor == 'cutpaste':
-    #     for k in list(state_dict.keys()):
-    #         # delete all the head layers attached
-    #         if not k.startswith('model'):
-    #             del state_dict[k]
-    # load params
+    elif feature_extractor == 'cutpaste':
+        for k in list(state_dict.keys()):
+            # delete all the head layers attached
+            if not k.startswith('model'):
+                del state_dict[k]
+    #load params
     net.load_state_dict(state_dict, strict=False)
     return net
+
+def prepare_torchscript_model(model):
+    print("Preparing torchscript model")
+    if args.dtype=='bf16':
+        model = ipex.optimize(model, dtype=torch.bfloat16, inplace=True)
+        # print("running bfloat16 evalation step\n")
+    else:
+        model = ipex.optimize(model, dtype=torch.float32, inplace=True)
+        # print("running fp32 evalation step\n")
+
+    x = torch.randn(args.batch_size, 3, 224, 224).contiguous(memory_format=torch.channels_last)
+    if args.dtype=='bf16':
+        x = x.to(torch.bfloat16)
+        with torch.cpu.amp.autocast(dtype=torch.bfloat16), torch.no_grad():
+            model = torch.jit.trace(model, x, strict=False).eval()
+    else:
+        with torch.no_grad():
+            model = torch.jit.trace(model, x, strict=False).eval()
+    model = torch.jit.freeze(model)
+    return model
 
 def main(args):
 
@@ -234,26 +258,8 @@ def main(args):
 
         # Training Data loading code
         traindir_ss = os.path.join(args.data, args.category,'train')
-        normalize = transforms.Normalize(mean=imagenet_mean,
-                                         std=imagenet_std)
 
-        # MoCo v2's aug: similar to SimCLR https://arxiv.org/abs/2002.05709
-        augmentation = [
-            transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
-            transforms.RandomApply([
-                transforms.ColorJitter(0.1, 0.1, 0.1, 0.1)  # not strengthened
-            ], p=0.8),
-            transforms.RandomGrayscale(p=0.2),
-            transforms.RandomApply([simsiam.loader.GaussianBlur([.1, 2.])], p=0.5),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            normalize
-        ]
-
-        train_dataset_ss = datasets.ImageFolder(
-            traindir_ss,
-            simsiam.loader.TwoCropsTransform(transforms.Compose(augmentation)))
-
+        train_dataset_ss = datasets.ImageFolder(traindir_ss, simsiam.loader.TwoCropsTransform(transforms.Compose(simsiam.loader.get_simsiam_augmentation())))
         train_sampler = None
         train_loader_ss = torch.utils.data.DataLoader(
             train_dataset_ss, batch_size=batch_size_ss, shuffle=(train_sampler is None),
@@ -264,6 +270,8 @@ def main(args):
         is_best_ans = False
         file_name_least_loss=""
         print("Fine-tuning SIMSIAM Model on ", args.epochs, "epochs using ", len(train_loader_ss), " training images")
+        model.train()
+        model, optimizer = ipex.optimize(model, optimizer=optimizer)
         for epoch in range(0, args.epochs):
             adjust_learning_rate(optimizer, init_lr, epoch,args.epochs)
 
@@ -334,6 +342,8 @@ def main(args):
         is_best_ans = False
         file_name_least_loss = ""
         print("Fine-tuning CUT-PASTE Model on ", args.epochs, "epochs using ", len(train_data), " training images")
+        model.train()
+        model, optimizer = ipex.optimize(model, optimizer=optimizer)
         for step in range(args.epochs):
             epoch = int(step / 1)
             
@@ -358,8 +368,8 @@ def main(args):
     else:
         print("Loading Backbone ResNet50 Model \n")
         net = resnet50(weights=ResNet50_Weights.IMAGENET1K_V1)
-        model = model_factory.get_model(model_name=model_name, framework="pytorch", use_case='anomaly_detection')
-        img_dir = os.path.join(args.path, args.category)
+        model = model_factory.get_model(model_name=args.model, framework="pytorch", use_case='anomaly_detection')
+        img_dir = os.path.join(args.data, args.category)
         dataset = dataset_factory.load_dataset(img_dir, 
                                        use_case='image_anomaly_detection', 
                                        framework="pytorch")
@@ -369,7 +379,6 @@ def main(args):
         return
 
 
-
     net = net.to(device)
     net.eval()
 
@@ -377,7 +386,7 @@ def main(args):
     testset = Mvtec(args.data,object_type=args.category,split='test',defect_type='all',im_size=args.image_size)
 
     train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=False, num_workers=args.workers)
-    test_loader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=False,num_workers=args.workers)
+    test_loader = torch.utils.data.DataLoader(Repeat(testset,args.repeat), batch_size=args.batch_size, shuffle=False,num_workers=args.workers)
 
     ###################################
     ### FEATURE EXTRACTION  ###########
@@ -387,6 +396,7 @@ def main(args):
     data = next(iter(eval_loader))
     return_nodes = {l: l for l in [layer]}
     partial_model = create_feature_extractor(net, return_nodes=return_nodes)
+    partial_model = prepare_torchscript_model(partial_model)
     features = partial_model(data['data'].to(device))[layer]
     pool_out=torch.nn.functional.avg_pool2d(features, pool)
     outputs_inner = pool_out.contiguous().view(pool_out.size(0), -1)
@@ -443,8 +453,7 @@ def main(args):
 
         count = 0
         for k, data in enumerate(tqdm(test_loader)):
-
-            inputs = data['data'].to(memory_format=torch.channels_last)
+            inputs = data['data'].contiguous(memory_format=torch.channels_last)
 
             labels = data['label']
             num_im = inputs.shape[0]
@@ -520,15 +529,20 @@ def args_parser():
     parser.add_argument('--category', action='store', type=str, default='hazelnut',
                         help='category of the dataset, i.e. hazelnut')
 
-    parser.add_argument('--freeze_resnet', action='store',  type=int, default=20,
+    parser.add_argument('--freeze_resnet', action='store',  type=int, default=0,
                         help='Epochs upto you want to freeze ResNet layers and only train the new header with FC layers')
 
-    parser.add_argument('--cutpaste_type', default="normal", choices=['normal', 'scar', '3way', 'union'], help='cutpaste variant to use (dafault: "normal")')
+    parser.add_argument('--cutpaste_type', default="normal", choices=['normal', 'scar', '3way', 'union'], 
+                        help='cutpaste variant to use (dafault: "normal")')
 
     parser.add_argument('--head_layer', default=2, type=int,
                     help='number of layers in the projection head (default: 1)')
     
     parser.add_argument('--workers', default=56, type=int, help="number of workers to use for data loading (default:56)")
+
+    parser.add_argument('--repeat', default=1000, type=int, help="number of test images to use for testing (default:1000)")
+
+    parser.add_argument('--dtype', default="fp32", choices=['fp32', 'bf16'], help='data type precision of model inference (dafault: "fp32")')
 
     args = parser.parse_args()
     return args

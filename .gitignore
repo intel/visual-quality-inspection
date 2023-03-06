@@ -2,5 +2,6 @@
 *.pth.tar
 **/__pycache__/
 **/models/
+**/frameworks.ai.transfer-learning/
 test.py
 archive.zip
