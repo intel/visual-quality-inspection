@@ -42,7 +42,7 @@ import torchvision.models as models
 from torchvision.transforms.functional import InterpolationMode
 from torchvision.models import resnet18, resnet50, efficientnet_b5
 from torchvision.models import ResNet18_Weights, ResNet50_Weights, EfficientNet_B5_Weights
-from torchvision.models.feature_extraction import create_feature_extractor
+from torchvision.models.feature_extraction import create_feature_extractor,get_graph_node_names
 
 import intel_extension_for_pytorch as ipex
 
@@ -78,9 +78,10 @@ imagenet_std = [0.229, 0.224, 0.225]
 batch_size = 32
 batch_size_ss = 64
 layer='layer3'
-pool=2
+pool=1
 pca_thresholds=0.99
 device = "cpu"
+
 
 ###################################
 ### TRAINING SIMSIAM  #############
@@ -141,7 +142,8 @@ def train_cutpaste(dataloader, model, criterion, optimizer, epoch,scheduler):
     # # model, optimizer = ipex.optimize(model, optimizer=optimizer)
 
     if epoch == args.freeze_resnet:
-                model.unfreeze()
+        print(epoch)
+        model.unfreeze()
 
     end = time.time()
     for i, data in enumerate(dataloader):
@@ -195,7 +197,6 @@ def load_checkpoint_weights(args,filename, feature_extractor=None):
         net = resnet50(pretrained=False)
     else:
         net = resnet18(pretrained=False)
-
     # original saved file with DataParallel
     ckpt = torch.load("./models/"+filename,map_location=torch.device('cpu'))
     state_dict = ckpt['state_dict']    # incase there are extra parameters in the model
@@ -211,13 +212,31 @@ def load_checkpoint_weights(args,filename, feature_extractor=None):
             del state_dict[k]
     elif feature_extractor == 'cutpaste':
         for k in list(state_dict.keys()):
-            # delete all the head layers attached
-            if not k.startswith('model'):
-                del state_dict[k]
+             # retain only encoder up to before the embedding layer
+            if k.startswith('model.'):
+                # remove prefix
+                state_dict[k[len("model."):]] = state_dict[k]
+            # delete renamed or unused k
+            del state_dict[k]
+    else:
+        head_layers = [512]*args.head_layer+[128]
+        num_classes = state_dict["out.weight"].shape[0]
+        print(num_classes)
+        net = ProjectionNet(model_name=args.model,pretrained=False, head_layers=head_layers, num_classes=num_classes)
+        train_nodes, eval_nodes = get_graph_node_names(net)
+        # print(eval_nodes)
     #load params
     net.load_state_dict(state_dict, strict=False)
     return net
 
+def get_model_from_directory(args):
+    models=[]
+    for filename in os.listdir(args.model_path):
+        f = os.path.join(args.model_path, filename)
+        # checking if it is a file, correct category and correct self-supervised technique
+        if os.path.isfile(f) and args.category in os.path.basename(f) and args.cutpaste:
+            models.append(f)
+    return os.path.basename(max(models, key=os.path.getctime))
 def prepare_torchscript_model(model):
     print("Preparing torchscript model")
     if args.dtype=='bf16':
@@ -239,6 +258,15 @@ def prepare_torchscript_model(model):
     return model
 
 def main(args):
+
+    trainset = Mvtec(args.data,object_type=args.category,split='train',im_size=args.image_size)
+    testset = Mvtec(args.data,object_type=args.category,split='test',defect_type='all',im_size=args.image_size)
+
+    train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=False, num_workers=args.workers)
+    if args.repeat:
+        test_loader = torch.utils.data.DataLoader(Repeat(testset,args.repeat), batch_size=args.batch_size, shuffle=False,num_workers=args.workers)
+    else:
+        test_loader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=False,num_workers=args.workers)
 
     if args.simsiam:
         dim=1000
@@ -281,7 +309,7 @@ def main(args):
             if (curr_loss < best_least_Loss):
                 best_least_Loss = curr_loss
                 is_best_ans = True
-                file_name_least_loss = 'simsiam-checkpoint_{:04d}.pth.tar'.format(epoch)
+                file_name_least_loss = 'simsiam_{}_checkpoint_{:04d}.pth.tar'.format(args.category, epoch)
             
             ## Saves the Best Intermediate Checkpoints got till this step.
             save_checkpoint({
@@ -300,70 +328,75 @@ def main(args):
         net= load_checkpoint_weights(args,file_name_least_loss, feature_extractor='simsiam')
 
     elif args.cutpaste:
-        print("=> creating CUT-PASTE feature extractor with the backbone of'{}'".format(args.model))
+        if len(args.model_path) == 0:
+            print("=> creating CUT-PASTE feature extractor with the backbone of'{}'".format(args.model))
 
-        weight_decay = 0.00003
-        momentum = 0.9
+            weight_decay = 0.00003
+            momentum = 0.9
 
-        variant_map = {'normal':CutPasteNormal, 'scar':CutPasteScar, '3way':CutPaste3Way, 'union':CutPasteUnion}
-        variant = variant_map[args.cutpaste_type]
+            variant_map = {'normal':CutPasteNormal, 'scar':CutPasteScar, '3way':CutPaste3Way, 'union':CutPasteUnion}
+            variant = variant_map[args.cutpaste_type]
 
-        #augmentation:
-        min_scale = 1
+            #augmentation:
+            min_scale = 1
 
-        train_data = Mvtec(args.data, args.category, split='train',im_size=int(args.image_size * (1/min_scale)),transform = get_cutpaste_transforms(args.image_size,variant))
-        dataloader = torch.utils.data.DataLoader(train_data, batch_size=args.batch_size, drop_last=False,
-                                shuffle=True, num_workers=args.workers,# collate_fn=cut_paste_collate_fn,
-                                persistent_workers=True, pin_memory=True, prefetch_factor=5)
+            train_data = Mvtec(args.data, args.category, split='train',im_size=int(args.image_size * (1/min_scale)),transform = get_cutpaste_transforms(args.image_size,variant))
+            dataloader = torch.utils.data.DataLoader(train_data, batch_size=args.batch_size, drop_last=False,
+                                    shuffle=True, num_workers=args.workers,# collate_fn=cut_paste_collate_fn,
+                                    persistent_workers=True, pin_memory=True, prefetch_factor=5)
 
-        # create Model:
-        head_layers = [512]*args.head_layer+[128]
-        num_classes = 2 if variant is not CutPaste3Way else 3
-        model = ProjectionNet(model_name=args.model,pretrained=True, head_layers=head_layers, num_classes=num_classes)
-        model.to(device)
+            # create Model:
+            head_layers = [512]*args.head_layer+[128]
+            num_classes = 2 if variant is not CutPaste3Way else 3
+            model = ProjectionNet(model_name=args.model,pretrained=True, head_layers=head_layers, num_classes=num_classes)
+            model.to(device)
 
-        if args.freeze_resnet > 0:
-            model.freeze_resnet()
+            if args.freeze_resnet > 0:
+                model.freeze_resnet()
 
-        criterion = torch.nn.CrossEntropyLoss()
-        if args.optim == "sgd":
-            optimizer = torch.optim.SGD(model.parameters(), lr=0.03, momentum=momentum,  weight_decay=weight_decay)
-            scheduler = lr_scheduler.CosineAnnealingWarmRestarts(optimizer, args.epochs)
-            #scheduler = None
-        elif args.optim == "adam":
-            optimizer = torch.optim.Adam(model.parameters(), lr=0.03, weight_decay=weight_decay)
-            scheduler = None
+            criterion = torch.nn.CrossEntropyLoss()
+            if args.optim == "sgd":
+                optimizer = torch.optim.SGD(model.parameters(), lr=0.03, momentum=momentum,  weight_decay=weight_decay)
+                scheduler = lr_scheduler.CosineAnnealingWarmRestarts(optimizer, args.epochs)
+                #scheduler = None
+            elif args.optim == "adam":
+                optimizer = torch.optim.Adam(model.parameters(), lr=0.03, weight_decay=weight_decay)
+                scheduler = None
+            else:
+                print(f"ERROR unkown optimizer: {optim_name}")
+
+            num_batches = len(dataloader)
+           
+            best_least_Loss = float('inf')
+            is_best_ans = False
+            file_name_least_loss = ""
+            print("Fine-tuning CUT-PASTE Model on ", args.epochs, "epochs using ", len(train_data), " training images")
+            model.train()
+            model, optimizer = ipex.optimize(model, optimizer=optimizer)
+            for step in range(args.epochs):
+                epoch = int(step / 1)
+                
+                curr_loss = train_cutpaste(dataloader, model, criterion, optimizer, epoch,scheduler)
+
+                if (curr_loss < best_least_Loss):
+                    best_least_Loss = curr_loss
+                    is_best_ans = True
+                    file_name_least_loss = 'cutpaste_{}_checkpoint_{:04d}.pth.tar'.format(args.category, step)
+                
+                ## Saves the Best Intermediate Checkpoints got till this step.
+                save_checkpoint({
+                    'epoch': step + 1,
+                    'arch': args.model,
+                    'state_dict': model.state_dict(),
+                    # 'state_dict': model.encoder.state_dict(),
+                    'optimizer' : optimizer.state_dict(),
+                }, is_best=is_best_ans, filename=file_name_least_loss, loss=best_least_Loss)
+                is_best_ans=False
+            net= load_checkpoint_weights(args,file_name_least_loss, feature_extractor='cutpaste')
+            # temp_evaluate(train_loader,test_loader,trainset,net)
         else:
-            print(f"ERROR unkown optimizer: {optim_name}")
-
-        num_batches = len(dataloader)
-       
-        best_least_Loss = float('inf')
-        is_best_ans = False
-        file_name_least_loss = ""
-        print("Fine-tuning CUT-PASTE Model on ", args.epochs, "epochs using ", len(train_data), " training images")
-        model.train()
-        model, optimizer = ipex.optimize(model, optimizer=optimizer)
-        for step in range(args.epochs):
-            epoch = int(step / 1)
-            
-            curr_loss = train_cutpaste(dataloader, model, criterion, optimizer, epoch,scheduler)
-
-            if (curr_loss < best_least_Loss):
-                best_least_Loss = curr_loss
-                is_best_ans = True
-                file_name_least_loss = 'cutpaste_checkpoint_{:04d}.pth.tar'.format(step)
-            
-            ## Saves the Best Intermediate Checkpoints got till this step.
-            save_checkpoint({
-                'epoch': step + 1,
-                'arch': args.model,
-                'state_dict': model.state_dict(),
-                # 'state_dict': model.encoder.state_dict(),
-                'optimizer' : optimizer.state_dict(),
-            }, is_best=is_best_ans, filename=file_name_least_loss, loss=best_least_Loss)
-            is_best_ans=False
-        net= load_checkpoint_weights(args,file_name_least_loss, feature_extractor='cutpaste')
+            model_path = get_model_from_directory(args)
+            net= load_checkpoint_weights(args,model_path,feature_extractor='cutpaste')
 
     else:
         print("Loading Backbone ResNet50 Model \n")
@@ -374,19 +407,13 @@ def main(args):
                                        use_case='image_anomaly_detection', 
                                        framework="pytorch")
         dataset.preprocess(model.image_size, batch_size=args.batch_size, interpolation=InterpolationMode.LANCZOS)
-        components = model.train(dataset,'.', layer_name=layer, pooling='avg', kernel_size=pool, pca_threshold=pca_thresholds)
-
-        return
+        components,auc = model.train(dataset,'.', layer_name=layer, pooling='avg', kernel_size=pool, pca_threshold=pca_thresholds)
+        return len(test_loader.dataset),auc*100
 
 
     net = net.to(device)
     net.eval()
 
-    trainset = Mvtec(args.data,object_type=args.category,split='train',im_size=args.image_size)
-    testset = Mvtec(args.data,object_type=args.category,split='test',defect_type='all',im_size=args.image_size)
-
-    train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=False, num_workers=args.workers)
-    test_loader = torch.utils.data.DataLoader(Repeat(testset,args.repeat), batch_size=args.batch_size, shuffle=False,num_workers=args.workers)
 
     ###################################
     ### FEATURE EXTRACTION  ###########
@@ -396,9 +423,9 @@ def main(args):
     data = next(iter(eval_loader))
     return_nodes = {l: l for l in [layer]}
     partial_model = create_feature_extractor(net, return_nodes=return_nodes)
-    partial_model = prepare_torchscript_model(partial_model)
+    # partial_model = prepare_torchscript_model(partial_model)
     features = partial_model(data['data'].to(device))[layer]
-    pool_out=torch.nn.functional.avg_pool2d(features, pool)
+    pool_out= torch.nn.functional.avg_pool2d(features, pool) if pool > 1 else features
     outputs_inner = pool_out.contiguous().view(pool_out.size(0), -1)
 
     data_mats_orig = torch.empty((outputs_inner.shape[1], len(trainset))).to(device)
@@ -412,7 +439,7 @@ def main(args):
             images, labels = images.to(device), labels.to(device)
             num_samples = len(labels)
             features = partial_model(images)[layer]
-            pool_out=torch.nn.functional.avg_pool2d(features, pool)
+            pool_out= torch.nn.functional.avg_pool2d(features, pool) if pool > 1 else features
             outputs = pool_out.contiguous().view(pool_out.size(0), -1)
             oi = torch.squeeze(outputs)
             data_mats_orig[:, data_idx:data_idx+num_samples] = oi.transpose(1, 0)
@@ -459,7 +486,7 @@ def main(args):
             num_im = inputs.shape[0]
 
             features = partial_model(inputs)[layer]
-            pool_out=torch.nn.functional.avg_pool2d(features, pool)
+            pool_out= torch.nn.functional.avg_pool2d(features, pool) if pool > 1 else features
             outputs = pool_out.contiguous().view(pool_out.size(0), -1)
 
             feature_shapes = outputs.shape
@@ -481,12 +508,19 @@ def main(args):
     ### AUROC SCORE for Evaluation  ###
     ###################################
     print("AUROC is computed on",  len(test_loader.dataset), "Test Images \n")
-    fpr_binary, tpr_binary, _ = metrics.roc_curve(gt, scores)
+    fpr_binary, tpr_binary, thres = metrics.roc_curve(gt, scores)
+    threshold = find_threshold(fpr_binary, tpr_binary, thres)
+    print("Best threshold for classification is ", threshold)
     auc_roc_binary = metrics.auc(fpr_binary, tpr_binary)
-
+    accuracy_score = metrics.accuracy_score(gt, [1 if i>=threshold else 0 for i in scores])
     print(f'AUROC: {auc_roc_binary*100}')
+    print(f'Accuracy: {accuracy_score*100}')
     return len_dataset, auc_roc_binary*100
 
+def find_threshold(fpr,tpr,thr):
+    j_scores = tpr-fpr
+    j_ordered = sorted(zip(j_scores,thr))
+    return np.round(j_ordered[-1][1],2)
 
 def print_datasets_results(results):
     count=1
@@ -529,7 +563,7 @@ def args_parser():
     parser.add_argument('--category', action='store', type=str, default='hazelnut',
                         help='category of the dataset, i.e. hazelnut')
 
-    parser.add_argument('--freeze_resnet', action='store',  type=int, default=0,
+    parser.add_argument('--freeze_resnet', action='store',  type=int, default=20,
                         help='Epochs upto you want to freeze ResNet layers and only train the new header with FC layers')
 
     parser.add_argument('--cutpaste_type', default="normal", choices=['normal', 'scar', '3way', 'union'], 
@@ -540,9 +574,12 @@ def args_parser():
     
     parser.add_argument('--workers', default=56, type=int, help="number of workers to use for data loading (default:56)")
 
-    parser.add_argument('--repeat', default=1000, type=int, help="number of test images to use for testing (default:1000)")
+    parser.add_argument('--repeat', default=0, type=int, help="number of test images to use for testing (default:0)")
 
     parser.add_argument('--dtype', default="fp32", choices=['fp32', 'bf16'], help='data type precision of model inference (dafault: "fp32")')
+
+    parser.add_argument('--model_path', action='store', type=str, default="",
+                        help='path for feature extractor model')
 
     args = parser.parse_args()
     return args
