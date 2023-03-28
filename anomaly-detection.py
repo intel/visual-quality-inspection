@@ -127,7 +127,7 @@ def train_simsiam(train_loader, model, criterion, optimizer, epoch):
 ###################################
 ### TRAINING CUTPASTE  ############
 ###################################
-def train_cutpaste(dataloader, model, criterion, optimizer, epoch,scheduler):
+def train_cutpaste(args,dataloader, model, criterion, optimizer, epoch,scheduler):
     print_freq=1
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
@@ -229,6 +229,7 @@ def load_checkpoint_weights(args,filename, feature_extractor=None):
     net.load_state_dict(state_dict, strict=False)
     return net
 
+
 def get_model_from_directory(args):
     models=[]
     for filename in os.listdir(args.model_path):
@@ -258,7 +259,7 @@ def prepare_torchscript_model(model):
     return model
 
 def main(args):
-
+    print(args)
     trainset = Mvtec(args.data,object_type=args.category,split='train',im_size=args.image_size)
     testset = Mvtec(args.data,object_type=args.category,split='test',defect_type='all',im_size=args.image_size)
 
@@ -267,7 +268,7 @@ def main(args):
         test_loader = torch.utils.data.DataLoader(Repeat(testset,args.repeat), batch_size=args.batch_size, shuffle=False,num_workers=args.workers)
     else:
         test_loader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=False,num_workers=args.workers)
-
+    curr_loss=0
     if args.simsiam:
         dim=1000
         pred_dim=250
@@ -376,22 +377,33 @@ def main(args):
             for step in range(args.epochs):
                 epoch = int(step / 1)
                 
-                curr_loss = train_cutpaste(dataloader, model, criterion, optimizer, epoch,scheduler)
+                curr_loss = train_cutpaste(args,dataloader, model, criterion, optimizer, epoch,scheduler)
 
-                if (curr_loss < best_least_Loss):
-                    best_least_Loss = curr_loss
-                    is_best_ans = True
-                    file_name_least_loss = 'cutpaste_{}_checkpoint_{:04d}.pth.tar'.format(args.category, step)
-                
-                ## Saves the Best Intermediate Checkpoints got till this step.
-                save_checkpoint({
-                    'epoch': step + 1,
-                    'arch': args.model,
-                    'state_dict': model.state_dict(),
-                    # 'state_dict': model.encoder.state_dict(),
-                    'optimizer' : optimizer.state_dict(),
-                }, is_best=is_best_ans, filename=file_name_least_loss, loss=best_least_Loss)
-                is_best_ans=False
+                if args.ckpt:
+                    if (curr_loss < best_least_Loss):
+                        best_least_Loss = curr_loss
+                        is_best_ans = True
+                        file_name_least_loss = 'cutpaste_{}_checkpoint_{:04d}.pth.tar'.format(args.category, step)
+                    
+                    ## Saves the Best Intermediate Checkpoints got till this step.
+                    save_checkpoint({
+                        'epoch': step + 1,
+                        'arch': args.model,
+                        'state_dict': model.state_dict(),
+                        # 'state_dict': model.encoder.state_dict(),
+                        'optimizer' : optimizer.state_dict(),
+                    }, is_best=is_best_ans, filename=file_name_least_loss, loss=best_least_Loss)
+                    is_best_ans=False
+                else:
+                    if epoch == args.epochs -1:
+                        file_name_least_loss = 'cutpaste_{}_checkpoint_{:04d}.pth.tar'.format(args.category, step)
+                        save_checkpoint({
+                            'epoch': step + 1,
+                            'arch': args.model,
+                            'state_dict': model.state_dict(),
+                            # 'state_dict': model.encoder.state_dict(),
+                            # 'optimizer' : optimizer.state_dict(),
+                        }, is_best=True, filename=file_name_least_loss, loss=curr_loss)
             net= load_checkpoint_weights(args,file_name_least_loss, feature_extractor='cutpaste')
             # temp_evaluate(train_loader,test_loader,trainset,net)
         else:
@@ -515,7 +527,7 @@ def main(args):
     accuracy_score = metrics.accuracy_score(gt, [1 if i>=threshold else 0 for i in scores])
     print(f'AUROC: {auc_roc_binary*100}')
     print(f'Accuracy: {accuracy_score*100}')
-    return len_dataset, auc_roc_binary*100
+    return len_dataset, auc_roc_binary*100, curr_loss
 
 def find_threshold(fpr,tpr,thr):
     j_scores = tpr-fpr
@@ -580,6 +592,10 @@ def args_parser():
 
     parser.add_argument('--model_path', action='store', type=str, default="",
                         help='path for feature extractor model')
+    parser.add_argument('--sigopt', action='store_true', default=False,
+                        help='Enable if you are using SIGOPT for hyperparameter search')
+    parser.add_argument('--ckpt', action='store_true', default=True,
+                        help='Enable if you want to save every checkpoint where training loss decreases')
 
     args = parser.parse_args()
     return args
@@ -595,7 +611,7 @@ if __name__ == '__main__':
             for category in all_categories:
                 print("\n#### Processing "+category.upper()+ " dataset started ##########\n")
                 args.category = category
-                len_inference_data,auroc = main(args)
+                len_inference_data,auroc, loss = main(args)
                 results.append([category,len_inference_data,auroc])
                 print("\n#### Processing "+category.upper()+ " dataset completed ########\n")
             print(print_datasets_results(results))
