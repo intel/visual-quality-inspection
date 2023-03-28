@@ -12,7 +12,7 @@
    #conda activate anomaly_det_refkit
    python3 -m venv venv
    source venv/bin/activate
-   pip install -r requirements.txt -f https://download.pytorch.org/whl/cpu/torch_stable.html
+   pip install -r requirements.txt
    ```
 
 ### 3. Download the Transfer Learning Toolkit (TLT)
