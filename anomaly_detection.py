@@ -19,18 +19,52 @@ from sklearnex import patch_sklearn
 patch_sklearn()
 
 
-def inference_workflow(model, pca_kernel, dataset,config):
+def inference_workflow_bk(model, pca_kernel, dataset,config):
     features,gt = ad.get_features(model,dataset.test_loader,config['model'])
     pca_components = pca_kernel.transform(features.T)
     features_reconstructed = pca_kernel.inverse_transform(pca_components)
     fre = torch.square(features.T - features_reconstructed).reshape(features.T.shape)
     fre_score = torch.sum(fre, dim=1)  # NxCxHxW --> NxHxW
-    print(fre_score.shape)
     return fre_score, gt
+    
+    
+def inference_workflow(model, pca_kernel, dataset,config):
+    dataset._dataset.transform = dataset._validation_transform
+
+    eval_loader = dataset.test_loader
+    data_length = len(dataset.test_subset)
+
+    print("Evaluating on {} test images".format(data_length))
+
+    with torch.no_grad():
+        gt = torch.zeros(data_length)
+        scores = np.empty(data_length)
+        count = 0
+        for k, (images, labels) in enumerate(tqdm(eval_loader)):
+            images = images.to(memory_format=torch.channels_last)
+            num_im = images.shape[0]
+            outputs = ad.extract_features(model, images, config['model']['layer'],
+                                        pooling=['avg', config['model']['pool']])
+            feature_shapes = outputs.shape
+            oi = outputs
+            oi_or = oi
+            oi_j = pca_kernel.transform(oi)
+            oi_reconstructed = pca_kernel.inverse_transform(oi_j)
+            fre = torch.square(oi_or - oi_reconstructed).reshape(feature_shapes)
+            fre_score = torch.sum(fre, dim=1)  # NxCxHxW --> NxHxW
+            scores[count: count + num_im] = -fre_score
+            gt[count:count + num_im] = labels
+            count += num_im
+
+        gt = gt.numpy()
+    return scores, gt
+    
     
 def train_workflow(dataset, config):
     model = ad.train(dataset, config)
     dataset._dataset.transform = dataset._train_transform
+    print("Training on {} train images".format(len(dataset.train_subset)))
+    
     features,labels = ad.get_features(model,dataset._train_loader,config['model'])
     pca_kernel = get_PCA_kernel(features,config)
     
@@ -55,7 +89,7 @@ def compute_auroc(gt, scores):
 
 def compute_accuracy(gt, scores, threshold):
     accuracy_score = metrics.accuracy_score(gt, [1 if i >= threshold else 0 for i in scores])
-    return np.round(accuracy_score,2)
+    return np.round(accuracy_score*100,2)
 
 if __name__ == "__main__":
     """Base function for anomaly detection workload"""
@@ -78,6 +112,6 @@ if __name__ == "__main__":
     
     accuracy = compute_accuracy(gt, inference_scores, threshold)
     
-    print(auroc)
-    print(accuracy)
+    print("AUROC  {} on test images".format(auroc))
+    print("Accuracy {}% on test images".format(accuracy))
     

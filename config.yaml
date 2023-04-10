@@ -8,7 +8,7 @@ model:
   name: resnet50 # pretrained backbone model ..choices are [resnet50, resnet18]
   layer: layer3  # intermediate layer from which features will be extracted
   pool: 2 # pooling kernel size for average pooling
-  feature_extractor: 'pretrained' # choices are [pretrained, cutpaste, simsiam]
+  feature_extractor: 'cutpaste' # choices are [pretrained, cutpaste, simsiam]
 #pretrained -  No fine-tuning on custom dataset, features will be extracted from pretrained ResNet model
 #simsiam - fine-tune resnet model on custom dataset using simsiam self-supervised technique
 #cutpaste - fine-tune resnet model on custom datset using cutpaste self-supervised technique
