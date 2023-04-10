@@ -85,47 +85,6 @@ device = "cpu"
 
 
 ###################################
-### TRAINING SIMSIAM  #############
-###################################
-
-def train_simsiam(train_loader, model, criterion, optimizer, epoch):
-    print_freq=1
-    batch_time = AverageMeter('Time', ':6.3f')
-    data_time = AverageMeter('Data', ':6.3f')
-    losses = AverageMeter('Loss', ':.4f')
-    progress = ProgressMeter(
-        len(train_loader),
-        [batch_time, data_time, losses],
-        prefix="Epoch: [{}]".format(epoch))
-
-    end = time.time()
-    for i, (images,_) in enumerate(train_loader):
-        # measure data loading time
-        data_time.update(time.time() - end)
-        # if args.gpu is not None:
-        images[0] = images[0].to('cpu')
-        images[1] = images[1].to('cpu')
-
-        # compute output and loss
-        p1, p2, z1, z2 = model(x1=images[0], x2=images[1])
-        loss = -(criterion(p1, z2).mean() + criterion(p2, z1).mean()) * 0.5        
-
-        losses.update(loss.item(), images[0].size(0))
-
-        # compute gradient and do SGD step
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-
-        # measure elapsed time
-        batch_time.update(time.time() - end)
-        end = time.time()
-        # print(i,print_freq)
-        if i % print_freq == 0:
-            curr_loss = progress.display(i)
-    return curr_loss
-
-###################################
 ### TRAINING CUTPASTE  ############
 ###################################
 def train_cutpaste(args,dataloader, model, criterion, optimizer, epoch,scheduler):
@@ -198,7 +157,7 @@ def load_checkpoint_weights(args,filename, feature_extractor=None):
         net = resnet50(pretrained=False)
     else:
         net = resnet18(pretrained=False)
-    # original saved file with DataParallel
+    # original saved file with DataParallel 
     ckpt = torch.load("./models/"+filename,map_location=torch.device('cpu'))
     state_dict = ckpt['state_dict']    # incase there are extra parameters in the model
     new_state_dict = OrderedDict()
@@ -260,7 +219,6 @@ def prepare_torchscript_model(model):
     return model
 
 def main(args):
-    print(args)
     trainset = Mvtec(args.data,object_type=args.category,split='train',im_size=args.image_size)
     testset = Mvtec(args.data,object_type=args.category,split='test',defect_type='all',im_size=args.image_size)
 
@@ -273,15 +231,51 @@ def main(args):
     if args.simsiam:
         model = model_factory.get_model(model_name=args.model, framework="pytorch", use_case='anomaly_detection')
         img_dir = os.path.join(args.data, args.category)
-        simsiam_dataset = dataset_factory.load_dataset(img_dir, 
-                                       use_case='image_anomaly_detection', 
-                                       framework="pytorch")
-        simsiam_dataset.preprocess(model.image_size, batch_size=batch_size, interpolation=InterpolationMode.LANCZOS)
-        components = model.train(simsiam_dataset, './models/', layer, feature_dim=1000, pred_dim=250, epochs=args.epochs, 
-                         initial_checkpoints='./simsiam/checkpoint_0099.pth.tar', seed=None,
-                         pooling='avg', kernel_size=2, pca_threshold=0.99, simsiam=True)
-        threshold, auc_roc_binary = model.evaluate(simsiam_dataset, use_test_set=False)
-        return len(testset), auc_roc_binary*100, curr_loss
+        print(img_dir)
+
+        # Select the subdirectory in dataset_dir to use
+        dataset = dataset_factory.load_dataset(img_dir,
+                                               use_case='image_anomaly_detection', 
+                                               framework="pytorch")
+
+        print(dataset._dataset)
+        print("Class names:", str(dataset.class_names))
+        print("Defect names:", dataset.defect_names)
+
+        dataset.preprocess(224, batch_size=args.batch_size, interpolation=InterpolationMode.LANCZOS)
+
+        dataset._dataset.transform = dataset._simsiam_transform
+        simsiam_model = model.train_simsiam(dataset._train_loader, './models/', epochs=2, feature_dim=1000,
+                            pred_dim=250, initial_checkpoints='./simsiam/checkpoint_0099.pth.tar')
+
+        from tqdm import tqdm
+        from tlt.models.image_anomaly_detection.pytorch_image_anomaly_detection_model import extract_features, pca
+
+        layer_name = 'layer3'
+        pool = 'avg'
+        kernel_size = 2
+        dataset._dataset.transform = dataset._train_transform
+        images, labels = dataset.get_batch()
+        outputs_inner = extract_features(simsiam_model, images.to('cpu'), layer_name,
+                                              pooling=[pool, kernel_size], feature_extractor='simsiam')
+        data_mats_orig = torch.empty((outputs_inner.shape[1], len(dataset.train_subset))).to('cpu')
+
+        # Feature extraction
+        with torch.no_grad():
+            data_idx = 0
+            num_ims = 0
+            for images, labels in tqdm(dataset._train_loader):
+                images, labels = images.to('cpu'), labels.to('cpu')
+                num_samples = len(labels)
+                outputs = extract_features(simsiam_model, images, layer_name, pooling=[pool, kernel_size], feature_extractor='simsiam')
+                oi = torch.squeeze(outputs)
+                data_mats_orig[:, data_idx:data_idx + num_samples] = oi.transpose(1, 0)
+                num_ims += 1
+                data_idx += num_samples
+        pca_threshold = 0.99
+        _pca_mats = pca(data_mats_orig, pca_threshold)
+
+        threshold, auroc = model.evaluate(dataset, _pca_mats, feature_extractor='simsiam', use_test_set=False)
 
 
     elif args.cutpaste:
@@ -320,7 +314,7 @@ def main(args):
                 optimizer = torch.optim.Adam(model.parameters(), lr=0.03, weight_decay=weight_decay)
                 scheduler = None
             else:
-                print(f"ERROR unkown optimizer: {optim_name}")
+                print(f"ERROR unkown optimizer: {args.optim}")
 
             num_batches = len(dataloader)
            
@@ -371,12 +365,15 @@ def main(args):
         net = resnet50(weights=ResNet50_Weights.IMAGENET1K_V1)
         model = model_factory.get_model(model_name=args.model, framework="pytorch", use_case='anomaly_detection')
         img_dir = os.path.join(args.data, args.category)
+
         dataset = dataset_factory.load_dataset(img_dir, 
                                        use_case='image_anomaly_detection', 
                                        framework="pytorch")
         dataset.preprocess(model.image_size, batch_size=args.batch_size, interpolation=InterpolationMode.LANCZOS)
-        components,auc = model.train(dataset,'.', layer_name=layer, pooling='avg', kernel_size=pool, pca_threshold=pca_thresholds)
-        return len(test_loader.dataset),auc*100
+
+        components = model.train(dataset,'.', layer_name=layer, pooling='avg', kernel_size=pool, pca_threshold=pca_thresholds)
+        threshold, auc_roc_binary = model.evaluate(dataset, use_test_set=False)
+        return len(testset), auc_roc_binary*100, curr_loss
 
 
     net = net.to(device)
