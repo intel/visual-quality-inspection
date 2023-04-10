@@ -54,8 +54,6 @@
    ```
    python anomaly_detection.py --config config.yaml
 
-   ```
-    ```
    Change settings in config.yaml to run different configurations 
 
    ```
