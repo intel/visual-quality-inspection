@@ -1,0 +1,9 @@
+mvtec
+output
+venv
+data
+dataset
+models
+.vscode
+__pycache__
+frameworks.ai.transfer-learning
