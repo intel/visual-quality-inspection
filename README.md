@@ -1,5 +1,14 @@
 # Mt. Whitney Reference Use Case: Anomaly Detection
 
+## Hardware Requirements
+There are workflow-specific hardware and software setup requirements depending on how the workflow is run. Bare metal development system and Docker image running locally have the same system requirements. 
+
+| Recommended Hardware         | Precision  |
+| ---------------------------- | ---------- |
+| Intel® 4th Gen Xeon® Scalable Performance processors| FP32, BF16 |
+| Intel® 1st, 2nd, 3rd, and 4th Gen Xeon® Scalable Performance processors| FP32 |
+
+
 ### 1. Create conda env and install software packages
    ```
    conda create -n anomaly_det_refkit python=3.9
