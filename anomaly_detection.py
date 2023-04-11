@@ -10,6 +10,7 @@ import argparse
 import numpy as np
 import torch 
 from tqdm import tqdm
+from prettytable import PrettyTable
 
 from workflows.vision_anomaly_detection.src import anomaly_detection_wl as ad
 
@@ -91,6 +92,16 @@ def compute_accuracy(gt, scores, threshold):
     accuracy_score = metrics.accuracy_score(gt, [1 if i >= threshold else 0 for i in scores])
     return np.round(accuracy_score*100,2)
 
+def print_datasets_results(results):
+    # count=1
+    my_table = PrettyTable()
+    my_table.field_names = ["Category", "Test set (Image count)", "AUROC", "Accuracy (%)"]
+    for result in results:
+        category, len_inference_data, auroc, accuracy = result[0],result[1],result[2],result[3]
+        my_table.add_row([category.upper(), len_inference_data, np.round(auroc,2),accuracy])
+        # count+=1
+    return my_table
+
 if __name__ == "__main__":
     """Base function for anomaly detection workload"""
     parser = argparse.ArgumentParser()
@@ -114,4 +125,4 @@ if __name__ == "__main__":
     
     print("AUROC  {} on test images".format(auroc))
     print("Accuracy {}% on test images".format(accuracy))
-    
+    print(print_datasets_results([[dataset_config['category_type'],len(dataset.test_subset),auroc,accuracy]]))

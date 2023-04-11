@@ -1,6 +1,22 @@
 # Mt. Whitney Reference Use Case: Anomaly Detection
 
-### 1. Clone the Anomaly Detection reference use case repository
+## Hardware Requirements
+There are workflow-specific hardware and software setup requirements depending on how the workflow is run. Bare metal development system and Docker image running locally have the same system requirements. 
+
+| Recommended Hardware         | Precision  |
+| ---------------------------- | ---------- |
+| Intel® 4th Gen Xeon® Scalable Performance processors| FP32, BF16 |
+| Intel® 1st, 2nd, 3rd, and 4th Gen Xeon® Scalable Performance processors| FP32 |
+
+
+### 1. Create conda env and install software packages
+   ```
+   conda create -n anomaly_det_refkit python=3.9
+   conda activate anomaly_det_refkit
+   pip install -r requirements.txt
+   ```
+
+### 2. Clone the Anomaly Detection reference use case repository
    ```
    git clone https://github.com/intel-innersource/frameworks.ai.end2end-ai-pipelines.anomaly-detection-ref-use-case.git
    cd frameworks.ai.end2end-ai-pipelines.anomaly-detection-ref-use-case
@@ -18,6 +34,7 @@
 ### 3. Download the Transfer Learning Toolkit (TLT)
    ```
    git clone https://github.com/intel-innersource/frameworks.ai.transfer-learning.git
+   git checkout pratool/anomaly_detection
    ```
 
 ### 4. Download and prepare the dataset
@@ -38,6 +55,15 @@
    ```
    python csv_generator_mvtec.py --path /path/to/mvtec/
    ```
+
+### OR
+   Download and pre-process the dataset using Model Zoo dataset download API
+   ```
+   git clone https://github.com/intel-innersource/frameworks.ai.models.intel-models.git
+   git checkout wafaa/datasetapi-mvtec-dataset
+   python dataset.py -n mvtec-ad --download --preprocess -d /data/datad/ad_best_testing/mvtec_dataset
+   ```
+   
 
 ### 5. Feature Extractor
 
