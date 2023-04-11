@@ -16,6 +16,7 @@
 ### 3. Download the Transfer Learning Toolkit (TLT)
    ```
    git clone https://github.com/intel-innersource/frameworks.ai.transfer-learning.git
+   git checkout pratool/anomaly_detection
    ```
 
 ### 4. Download and prepare the dataset
@@ -32,6 +33,15 @@
    python csv_generator_mvtec.py --path /path/to/mvtec/
    ```
 
+### OR
+   Download and pre-process the dataset using Model Zoo dataset download API
+   ```
+   git clone https://github.com/intel-innersource/frameworks.ai.models.intel-models.git
+   git checkout wafaa/datasetapi-mvtec-dataset
+   python dataset.py -n mvtec-ad --download --preprocess -d /data/datad/ad_best_testing/mvtec_dataset
+   ```
+   
+
 ### 5. Feature Extractor
 
    We have three feature extractor options.
@@ -40,8 +50,7 @@
    ```
    Download the Sim-Siam weights based on ResNet50 model and place under simsiam directory
    ```
-   https://dl.fbaipublicfiles.com/simsiam/models/100ep-256bs/pretrain/checkpoint_0099.pth.tar
-   mv checkpoint_0099.pth.tar simsiam
+   wget https://dl.fbaipublicfiles.com/simsiam/models/100ep-256bs/pretrain/checkpoint_0099.pth.tar
    ```
    ```
    Second - Cut-paste - A self-supervised method that takes ResNet50/ ResNet18 model as backbone and fine-tune the model on custom dataset to get better feature embedding
