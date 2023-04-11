@@ -39,7 +39,7 @@
    python csv_generator_mvtec.py --path /path/to/mvtec/
    ```
 
-### 5. Setup the feature extractor
+### 5. Feature Extractor
 
    We have three feature extractor options.
    ```
@@ -53,23 +53,15 @@
    Second - Cut-paste - A self-supervised method that takes ResNet50/ ResNet18 model as backbone and fine-tune the model on custom dataset to get better feature embedding
    ```
    ```
-   Third - No fine-tuning and just use pretrained ResNet50/ResNet18 model for feature extraction
+   Third - Pretrained - No fine-tuning and just use pretrained ResNet50/ResNet18 model for feature extraction
    ```
 ### 6. Running the workload
 
    ```
-   python anomaly-detection.py
+   python anomaly_detection.py --config config.yaml
 
-   Optional arguments:
-     -h, --help           show this help message and exit  
-     --simsiam            flag to fine-tune simsiam feature extractor  
-     --cutpaste           flag to fine-tune cutpaste feature extractor
-     --freeze_resnet      number of epochs until cutpaste backbone ResNet layers will be frozen and only head layers will be trained
-     --cutpaste_type      options for cutpaste augmentations {normal,scar,3way,union - default is normal} 
-     --head_layer         number of fully connected layers following ResNet backbone in cutpaste
-     --epochs EPOCHS      number of epochs to train SimSiam feature extractor  
-     --data PATH          path for MVTEC base dataset directory, i.e. /path/to/mvtec/  
-     --category CATEGORY  category of the dataset, i.e. hazelnut or all  
+   Change settings in config.yaml to run different configurations 
+
    ```
 
 
