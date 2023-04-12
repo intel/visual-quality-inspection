@@ -1,0 +1,133 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: {{ .Values.metadata.name }}
+spec:
+  templates:
+    - name: main
+      steps:
+      - name: tlt-fine-tuning
+        template: tlt-anomaly-detection
+      - name: evaluation
+        template: anomaly-detection
+        dependencies:
+          - tlt-fine-tuning
+        failFast: true
+    - name: tlt-fine-tuning
+      inputs:
+        {{- if eq .Values.dataset.type "s3" }}
+        artifacts:
+          - name: dataset
+            path: /workspace/data
+            s3:
+              key: {{ .Values.dataset.s3.key }}
+        {{ end }}
+      outputs:
+        artifacts:
+          - name: 'tlt-output'
+            path: /workspace/output
+            archive:
+              none: {}
+      container:
+        image: '{{ .Values.image.base }}:{{ .Values.image.tlt }}'
+        command:
+          - python
+        args:
+          - 'src/vision_anomaly_wrapper.py'
+          - '--config_file'
+          - '/workspace/configs/{{ .Values.workflow.config }}.yaml'
+        env:
+          - name: http_proxy
+            value: '{{"{{workflow.parameters.http_proxy}}"}}'
+          - name: https_proxy
+            value: '{{"{{workflow.parameters.http_proxy}}"}}'
+        volumeMounts:
+          - name: dshm
+            mountPath: /dev/shm
+          - name: output-dir
+            mountPath: /workspace/output
+        {{ if eq .Values.dataset.type "nfs" }}
+          - name: dataset-dir
+            mountPath: /workspace/data
+            subPath: {{ .Values.dataset.nfs.subPath }}
+        {{ end }}
+        workingDir: /workspace/workflows/vision_anomaly_detection
+        imagePullPolicy: Always
+      volumes:
+      - name: dshm
+        emptyDir:
+          medium: Memory
+      {{ if eq .Values.dataset.type "nfs" }}
+      - name: dataset-dir
+        nfs: 
+          server: {{ .Values.dataset.nfs.server }}
+          path: {{ .Values.dataset.nfs.path }}
+          readOnly: true
+      {{ end }}
+    - name: anomaly-detection
+      inputs:
+        {{- if eq .Values.dataset.type "s3" }}
+        artifacts:
+          - name: dataset
+            path: /workspace/data
+            s3:
+              key: {{ .Values.dataset.s3.key }}
+        {{ end }}
+      outputs:
+        artifacts:
+          - name: 'evaluation-output'
+            path: /workspace/output
+            archive:
+              none: {}
+      container:
+        image: '{{ .Values.image.base }}:{{ .Values.image.use_case }}'
+        command:
+          - python
+        args:
+        - '/workspace/anomaly_detection.py'
+        - '--config_file' 
+        - '/workspace/configs/{{ .Values.workflow.config }}.yaml'
+        - '--evaluations'
+        env:
+          - name: http_proxy
+            value: '{{"{{workflow.parameters.http_proxy}}"}}'
+          - name: https_proxy
+            value: '{{"{{workflow.parameters.http_proxy}}"}}'
+        volumeMounts:
+          - name: dshm
+            mountPath: /dev/shm
+          - name: output-dir
+            mountPath: /workspace/checkpoint
+        {{ if eq .Values.dataset.type "nfs" }}
+          - name: dataset-dir
+            mountPath: /workspace/data
+            subPath: {{ .Values.dataset.nfs.subPath }}
+        {{ end }}
+        workingDir: /workspace/workflows/vision_anomaly_detection
+        imagePullPolicy: Always
+      volumes:
+      - name: dshm
+        emptyDir:
+          medium: Memory
+      {{ if eq .Values.dataset.type "nfs" }}
+      - name: dataset-dir
+        nfs: 
+          server: {{ .Values.dataset.nfs.server }}
+          path: {{ .Values.dataset.nfs.path }}
+          readOnly: true
+      {{ end }}
+  entrypoint: main
+  arguments:
+    parameters:
+      - name: http_proxy
+        value: {{ .Values.proxy }}
+  volumeClaimTemplates:
+    - metadata:
+        name: output-dir
+        creationTimestamp: null
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 2Gi
