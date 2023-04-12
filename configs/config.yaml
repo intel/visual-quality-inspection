@@ -1,6 +1,6 @@
 num_workers: 32 # number of parallel threads to process the data
 dataset:
-  root_dir: ./datasets/mvtec  # full path of root directory of MVTEC dataset
+  root_dir: ./data  # full path of root directory of MVTEC dataset
   category_type: hazelnut # category type within MVTEC dataset
   batch_size: 32 # inference batch size
   image_size: 224 # each image resized to this size (224x224)
