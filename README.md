@@ -69,7 +69,22 @@ docker compose run preprocess
 Both NLP and Vision Fine-tuning containers must complete successfully before the Inference container can begin. The Inference container uses checkpoint files created by both the nlp and vision fine-tuning containers stored in the `${OUTPUT_DIR}` directory to complete inferencing tasks.
 
 
-![stock_docker_topology]()
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+flowchart RL
+  Vsimsiam{{../simsiam}} x-. /workspace/workflows/vision_anomaly_detection/simsiam .-x stocktltfinetuning[stock-tlt-fine-tuning]
+  VDATASETDIR{{"/${DATASET_DIR"}} x-. "-$PWD/../data}" .-x stocktltfinetuning
+  VCONFIGDIR{{"/${CONFIG_DIR"}} x-. "-$PWD/../configs}" .-x stocktltfinetuning
+  VOUTPUTDIR{{"/${OUTPUT_DIR"}} x-. "-$PWD/../output}" .-x stocktltfinetuning
+  Vsimsiam x-. /workspace/simsiam .-x stockevaluation[stock-evaluation]
+  VDATASETDIR x-. "-$PWD/../data}" .-x stockevaluation
+  VCONFIGDIR x-. "-$PWD/../configs}" .-x stockevaluation
+  VOUTPUTDIR x-. "-$PWD/../output}" .-x stockevaluation
+  stockevaluation --> stocktltfinetuning
+
+  classDef volumes fill:#0f544e,stroke:#23968b
+  class Vsimsiam,VDATASETDIR,VCONFIGDIR,VOUTPUTDIR,Vsimsiam,VDATASETDIR,VCONFIGDIR,VOUTPUTDIR volumes
+```
 
 Run entire pipeline to view the logs of different running containers.
 
@@ -100,7 +115,18 @@ fg
 ### 6. Run One Workflow with Docker Compose
 Create your own script and run your changes inside of the container or run inference without waiting for fine-tuning.
 
-![dev_docker_topology]()
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+flowchart RL
+  Vsimsiam{{../simsiam}} x-. /workspace/simsiam .-x dev
+  Vtransferlearning{{../transfer-learning}} x-. /workspace/transfer-learning .-x dev
+  VCONFIGDIR{{"/${CONFIG_DIR"}} x-. "-$PWD/../configs}" .-x dev
+  VDATASETDIR{{"/${DATASET_DIR"}} x-. "-$PWD/../data}" .-x dev
+  VOUTPUTDIR{{"/${OUTPUT_DIR"}} x-. "-$PWD/output}" .-x dev
+
+  classDef volumes fill:#0f544e,stroke:#23968b
+  class Vsimsiam,Vtransferlearning,VCONFIGDIR,VDATASETDIR,VOUTPUTDIR volumes
+```
 
 Run using Docker Compose.
 
@@ -175,7 +201,7 @@ chmod 700 get_helm.sh && \
 ### 3. Install Workflow Template
 ```bash
 export NAMESPACE=argo
-helm install --namespace ${NAMESPACE} --set proxy=${http_proxy} disease-prediction ./chart
+helm install --namespace ${NAMESPACE} --set proxy=${http_proxy} anomaly-detection ./chart
 argo submit --from wftmpl/workspace --namespace=${NAMESPACE}
 ```
 ### 4. View 
@@ -183,6 +209,7 @@ To view your workflow progress
 ```bash
 argo logs @latest -f
 ```
+
 ## Run Using Bare Metal
 ### 1. Create Conda Environment 
 ```
