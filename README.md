@@ -67,14 +67,25 @@ There are workflow-specific hardware and software setup requirements depending o
    ```
    Third - Pretrained - No fine-tuning and just use pretrained ResNet50/ResNet18 model for feature extraction
    ```
-### 6. Running the workload
+### 6. Running the workload without TLT
 
    ```
+   In config.yaml, change 'fine_tune' flag to false and provide model path under 'saved_model_path'  
+
    python anomaly_detection.py --config config.yaml
 
-   Change settings in config.yaml to run different configurations 
+   Change other settings in config.yaml to run different configurations 
 
    ```
 
+### 7. Running the workload with TLT
 
+   ```
+   In config.yaml, change 'fine_tune' flag to true and set the simsiam/cutpaste settings accordingly
+
+   python anomaly_detection.py --config config.yaml
+
+   Change other settings in config.yaml to run different configurations
+
+   ```
 
