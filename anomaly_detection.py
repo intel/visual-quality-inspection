@@ -180,13 +180,26 @@ def print_datasets_results(results):
         my_table.add_row([category.upper(), len_inference_data, np.round(auroc,2),accuracy])
         # count+=1
     return my_table
-def load_custom_model(model_path, model_config):
-    if model_config['name'] == 'resnet50':
+def load_custom_model(path, config):
+    if config['model']['name'] == 'resnet50':
         model = resnet50(pretrained=False)
     else:
         model = resnet18(pretrained=False)
     try:
-        ckpt = torch.load(model_path,map_location=torch.device('cpu'))
+        path = os.path.join(path,config['model']['feature_extractor']+'_'+
+                            config['model']['name']+'_'+config['dataset']['category_type']+'.pth.tar')
+        if os.path.exists(path):
+            ckpt = torch.load(path,map_location=torch.device('cpu'))
+            print("Loading the model from the following path: {}".format(path))
+        elif os.path.exists(
+            os.path.join(os.getcwd(),config['tlt_wf_path'],path.replace('./',''))):
+            path = os.path.join(os.getcwd(),config['tlt_wf_path'], path.replace('./',''))
+            ckpt = torch.load(path,map_location=torch.device('cpu'))
+            print("Loading the model from the following path: {}".format(path))
+        else:
+            print("Model not found, please put model in {} directory", os.getcwd())
+            sys.exit()
+        
         model.load_state_dict(ckpt['state_dict'] , strict=False)
         model.eval()
         return model
@@ -216,12 +229,12 @@ def main(config):
         print("Accuracy {}% on test images".format(accuracy))
         return [dataset_config['category_type'],len(dataset.test_subset),auroc,accuracy]
     else:
-        if config['dataset']['category_type'] == 'all':
-            path =  os.path.join(os.path.basename(config['saved_model_path']), config['model']['feature_extractor']+'_'
-                                 +config['model']['name']+'_'+config['dataset']['category_type']+'.pth.tar')
-            model = load_custom_model(path,model_config)
-        else:
-            model = load_custom_model(config['saved_model_path'],model_config)
+        # if config['dataset']['category_type'] == 'all':
+        #     path =  os.path.join(os.path.basename(config['output_path']), config['model']['feature_extractor']+'_'
+        #                          +config['model']['name']+'_'+config['dataset']['category_type']+'.pth.tar')
+        #     model = load_custom_model(path,config)
+        # else:
+        model = load_custom_model(config['output_path'],config)
         trainset = Mvtec(dataset_config['root_dir'],object_type=dataset_config['category_type'],split='train',
                         im_size=dataset_config['image_size'])
         testset = Mvtec(dataset_config['root_dir'],object_type=dataset_config['category_type'],split='test',
