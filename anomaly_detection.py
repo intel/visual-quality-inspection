@@ -3,29 +3,109 @@
 ###################################
 import os
 import sys
-sys.path.append('frameworks.ai.transfer-learning/')
-
 import yaml
 import argparse
 import numpy as np
 import torch 
 from tqdm import tqdm
 from prettytable import PrettyTable
-
-from workflows.vision_anomaly_detection.src import anomaly_detection_wl as ad
-
+from dataset import Mvtec
+from torchvision.models.feature_extraction import create_feature_extractor
+from torchvision.models import resnet18, resnet50
 from sklearn import metrics
 from sklearn.decomposition import PCA
 from sklearnex import patch_sklearn
 patch_sklearn()
 
 
+def get_partial_model(model,dataset, model_config):
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False)
+    data = next(iter(dataloader))
+    return_nodes = {l: l for l in [model_config['layer']]}
+    partial_model = create_feature_extractor(model, return_nodes=return_nodes)
+    features = partial_model(data['data'].to("cpu"))[model_config['layer']]
+    pool_out= torch.nn.functional.avg_pool2d(features, model_config['pool']) if model_config['pool'] > 1 else features
+    outputs_inner = pool_out.contiguous().view(pool_out.size(0), -1)
+    return partial_model, outputs_inner.shape
+    
+def get_train_features(partial_model, dataset,feature_shape, config):
+    print("Feature extraction for  {} training images".format(len(dataset)))
+    dataset_config = config['dataset']
+    model_config = config['model']
+    data_mats_orig = torch.empty((feature_shape[1], len(dataset))).to("cpu")
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=dataset_config['batch_size'], shuffle=False,
+                                                num_workers=config['num_workers'])
+    len_dataset = len(dataloader.dataset)
+    gt = torch.zeros(len_dataset)
+    with torch.no_grad():
+        data_idx = 0
+        for data in tqdm(dataloader):
+            images = data['data']
+            labels = data['label']
+            images, labels = images.to("cpu"), labels.to("cpu")
+            num_samples = len(labels)
+            features = partial_model(images)[model_config['layer']]
+            pool_out= torch.nn.functional.avg_pool2d(features, model_config['pool']) if model_config['pool'] > 1 else features
+            outputs = pool_out.contiguous().view(pool_out.size(0), -1)
+            oi = torch.squeeze(outputs)
+            data_mats_orig[:, data_idx:data_idx+num_samples] = oi.transpose(1, 0)
+            gt[data_idx:data_idx + num_samples] = labels
+            data_idx += num_samples
+        return data_mats_orig.numpy(), gt.numpy()
+    
+def inference_score(partial_model, pca_kernel, dataset, feature_shape, model_config):
+    print("Evaluation on {} training images".format(len(dataset)))
+    model_config = config['model']
+    dataset_config = config['dataset']
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=dataset_config['batch_size'], shuffle=False,
+                                                num_workers=config['num_workers'])
+    with torch.no_grad():
+        len_dataset = len(dataset)
+        gt = torch.zeros(len_dataset)
+        scores = np.empty(len_dataset)
+        count = 0
+        for k, data in enumerate(tqdm(dataloader)):
+            inputs = data['data'].contiguous(memory_format=torch.channels_last)
+
+            labels = data['label']
+            num_im = inputs.shape[0]
+
+            features = partial_model(inputs)[model_config['layer']]
+            pool_out= torch.nn.functional.avg_pool2d(features, model_config['pool']) if model_config['pool'] > 1 else features
+            outputs = pool_out.contiguous().view(pool_out.size(0), -1)
+
+            feature_shapes = outputs.shape
+            oi = outputs
+            oi_or = oi
+
+            oi_j = pca_kernel.transform(oi)
+            oi_reconstructed = pca_kernel.inverse_transform(oi_j)
+
+            fre = torch.square(oi_or - oi_reconstructed).reshape(feature_shapes)
+            fre_score = torch.sum(fre, dim=1)  # NxCxHxW --> NxHxW   
+            scores[count: count + num_im] = -fre_score
+
+            gt[count:count + num_im] = labels
+            count += num_im
+        gt = gt.numpy()
+        return scores, gt
+
+def get_scores(pca_kernel, features):
+    count = 0
+    oi_j = pca_kernel.transform(features.T)
+    oi_reconstructed = pca_kernel.inverse_transform(oi_j)
+    fre = torch.square(features.T - torch.tensor(oi_reconstructed))
+    print(fre.shape)
+    fre_score = torch.sum(fre, dim=1)  # NxCxHxW --> NxHxW   
+    print(fre_score.shape)
+    return fre_score
+
 def inference_workflow_bk(model, pca_kernel, dataset,config):
     features,gt = ad.get_features(model,dataset.test_loader,config['model'])
     pca_components = pca_kernel.transform(features.T)
     features_reconstructed = pca_kernel.inverse_transform(pca_components)
-    fre = torch.square(features.T - features_reconstructed).reshape(features.T.shape)
-    fre_score = torch.sum(fre, dim=1)  # NxCxHxW --> NxHxW
+    fre = torch.square(features.T - features_reconstructed)
+    fre_score = -torch.sum(fre, dim=1)  # NxCxHxW --> NxHxW
     return fre_score, gt
     
     
@@ -72,7 +152,6 @@ def train_workflow(dataset, config):
     return model, pca_kernel
     
 def get_PCA_kernel(features,config):
-    features = features.numpy()
     pca_kernel = PCA(config['pca']['pca_thresholds'])
     pca_kernel.fit(features.T)
     return pca_kernel
@@ -101,7 +180,63 @@ def print_datasets_results(results):
         my_table.add_row([category.upper(), len_inference_data, np.round(auroc,2),accuracy])
         # count+=1
     return my_table
+def load_custom_model(model_path, model_config):
+    if model_config['name'] == 'resnet50':
+        model = resnet50(pretrained=False)
+    else:
+        model = resnet18(pretrained=False)
+    try:
+        ckpt = torch.load(model_path,map_location=torch.device('cpu'))
+        model.load_state_dict(ckpt['state_dict'] , strict=False)
+        model.eval()
+        return model
+    except Exception as error:
+        print('Error while loading custom model: ' + repr(error))
+def main(config):
+    dataset_config = config['dataset']
+    model_config = config['model']
+    fine_tune = config['fine_tune']
+    if fine_tune:
+        sys.path.append('frameworks.ai.transfer-learning/')
+        from workflows.vision_anomaly_detection.src import anomaly_detection_wl as ad
+        
+        dataset = ad.get_dataset(os.path.join(dataset_config['root_dir'],dataset_config['category_type']), 
+                            dataset_config['image_size'],dataset_config['batch_size'])
+        
+        model, pca_kernel = train_workflow(dataset, config)
+        
+        inference_scores, gt = inference_workflow(model, pca_kernel, dataset,config)
+        
+        auroc, threshold = compute_auroc(gt,inference_scores)
+        
+        accuracy = compute_accuracy(gt, inference_scores, threshold)
+        
+        print("AUROC  {} on test images".format(auroc))
+        print("Accuracy {}% on test images".format(accuracy))
+        return [dataset_config['category_type'],len(dataset.test_subset),auroc,accuracy]
+    else:
+        model = load_custom_model(config['saved_model_path'],model_config)
+        trainset = Mvtec(dataset_config['root_dir'],object_type=dataset_config['category_type'],split='train',
+                        im_size=dataset_config['image_size'])
+        testset = Mvtec(dataset_config['root_dir'],object_type=dataset_config['category_type'],split='test',
+                        defect_type='all',im_size=dataset_config['image_size'])
+        partial_model, feature_shape =  get_partial_model(model,trainset, model_config)
+        
+        train_features, train_gt = get_train_features(partial_model, trainset, feature_shape, config)
+        pca_kernel = get_PCA_kernel(train_features,config)
+        
+        scores, test_gt = inference_score(partial_model, pca_kernel, testset, feature_shape, model_config)
 
+        
+        auroc, threshold = compute_auroc(test_gt,scores)
+        
+        accuracy = compute_accuracy(test_gt, scores, threshold)
+        print("Inference on {} test images are completed!!!".format(len(testset)))
+        print("AUROC  {} on test images".format(auroc))
+        print("Accuracy {}% on test images".format(accuracy))
+        return [dataset_config['category_type'],len(testset),auroc,accuracy]
+        
+    
 if __name__ == "__main__":
     """Base function for anomaly detection workload"""
     parser = argparse.ArgumentParser()
@@ -109,20 +244,23 @@ if __name__ == "__main__":
     args = parser.parse_args()
     with open(args.config_file, "r") as f:
         config = yaml.safe_load(f)
-    dataset_config = config['dataset']
-    model_config = config['model']
+    root_dir = config['dataset']['root_dir']
+    category = config['dataset']['category_type']
+    all_categories = [os.path.join(root_dir, o).split('/')[-1] for o in os.listdir(root_dir) if os.path.isdir(os.path.join(root_dir,o))]
+    all_categories.sort()
+    if category == 'all':
+        results=[]
+        for category in all_categories:
+            print("\n#### Processing "+category.upper()+ " dataset started ##########\n")
+            config['dataset']['category_type'] = category
+            result = main(config)
+            print(print_datasets_results([result]))
+            print("\n#### Processing "+category.upper()+ " dataset completed ########\n")
+            results.append(result)
+        print(print_datasets_results(results))
+    else:
+        print("\n#### Processing "+category.upper()+ " dataset started ##########\n")
+        results= main(config)
+        print(print_datasets_results([results]))
+        print("\n#### Processing "+category.upper()+ " dataset completed ########\n")
     
-    dataset = ad.get_dataset(os.path.join(dataset_config['root_dir'],dataset_config['category_type']), 
-                        dataset_config['image_size'],dataset_config['batch_size'])
-    
-    model, pca_kernel = train_workflow(dataset, config)
-    
-    inference_scores, gt = inference_workflow(model, pca_kernel, dataset,config)
-    
-    auroc, threshold = compute_auroc(gt,inference_scores)
-    
-    accuracy = compute_accuracy(gt, inference_scores, threshold)
-    
-    print("AUROC  {} on test images".format(auroc))
-    print("Accuracy {}% on test images".format(accuracy))
-    print(print_datasets_results([[dataset_config['category_type'],len(dataset.test_subset),auroc,accuracy]]))

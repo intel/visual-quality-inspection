@@ -19,7 +19,7 @@ def main(args):
                     write_file(file,path)
             else:
                 with open(os.path.join(path_category,category+'_train.csv'), 'w', newline='') as file:
-                    print("#### %s csv file %s_all.csv has been generated for %s dataset ####" %('train',category,  category.upper()))
+                    print("#### %s csv file %s_train.csv has been generated for %s dataset ####" %('train',category,  category.upper()))
                     write_file(file,path)
                     
 
