@@ -42,9 +42,9 @@ Ensure you have completed steps in the [Get Started Section](#get-started).
 Build or Pull the provided docker image.
 
 ```bash
+git submodule update --init --recursive
 cd docker
-docker compose build preprocess
-docker compose build stock-tlt-fine-tuning
+docker compose build
 ```
 OR
 ```bash
@@ -53,20 +53,21 @@ docker pull intel/ai-workflows:beta-tlt-anomaly-detection
 ```
 
 ### 4. Preprocess Dataset with Docker Compose
-Prepare dataset for Disease Prediction Workflows.
+Prepare dataset for Anomaly Detection workflows and accept the legal agreement to use the Intel Dataset Downloader.
 
 ```bash
 cd docker
-docker compose run preprocess
+docker compose run preprocess -e USER_CONSENT=y
 ```
 
 | Environment Variable Name | Default Value | Description |
 | --- | --- | --- |
 | DATASET_DIR | `$PWD/../data` | Unpreprocessed dataset directory |
+| USER_CONSENT | n/a | Consent to legal agreement | <!-- TCE: Please help me word this better -->
 
 ### 5. Run Pipeline with Docker Compose
 
-Both NLP and Vision Fine-tuning containers must complete successfully before the Inference container can begin. The Inference container uses checkpoint files created by both the nlp and vision fine-tuning containers stored in the `${OUTPUT_DIR}` directory to complete inferencing tasks.
+The Vision Fine-tuning container must complete successfully before the Evaluation container can begin. The Evaluation container uses the model and checkpoint files created by the vision fine-tuning containers stored in the `${OUTPUT_DIR}` directory to complete evaluation tasks.
 
 
 ```mermaid
@@ -90,14 +91,14 @@ Run entire pipeline to view the logs of different running containers.
 
 ```bash
 cd docker
-docker compose run stock-inference &
+docker compose run stock-evaluation &
 ```
 
 | Environment Variable Name | Default Value | Description |
 | --- | --- | --- |
-| CONFIG | `config` | Config file name |
+| CONFIG | `eval` | Config file name |
 | CONFIG_DIR | `$PWD/../configs` | Anomaly Detection Configurations directory |
-| DATASET_DIR | `$PWD/../data` | Unpreprocessed dataset directory |
+| DATASET_DIR | `$PWD/../data` | Preprocessed dataset directory |
 | OUTPUT_DIR | `$PWD/../output` | Logfile and Checkpoint output |
 
 #### View Logs
@@ -113,7 +114,7 @@ fg
 ```
 
 ### 6. Run One Workflow with Docker Compose
-Create your own script and run your changes inside of the container or run inference without waiting for fine-tuning.
+Create your own script and run your changes inside of the container or run the evaluation without waiting for fine-tuning.
 
 ```mermaid
 %%{init: {'theme': 'dark'}}%%
@@ -137,11 +138,10 @@ docker compose run dev
 
 | Environment Variable Name | Default Value | Description |
 | --- | --- | --- |
-| CONFIG | `config` | Config file name |
+| CONFIG | `eval` | Config file name |
 | CONFIG_DIR | `$PWD/../configs` | Anomaly Detection Configurations directory |
 | DATASET_DIR | `$PWD/../data` | Preprocessed Dataset |
 | OUTPUT_DIR | `$PWD/output` | Logfile and Checkpoint output |
-| PARAMETER | `evaluations` | Script file parameter |
 | SCRIPT | `hls_wrapper.py` | Name of Script |
 
 #### Run Docker Image in an Interactive Environment
@@ -162,11 +162,10 @@ Run the workflow with the ``docker run`` command, as shown:
 ```bash
 export CONFIG_DIR=$PWD/../configs
 export DATASET_DIR=$PWD/../data
-export OUTPUT_DIR=$PWD/output
+export OUTPUT_DIR=$PWD/../output
 docker run -a stdout ${DOCKER_RUN_ENVS} \
            -e PYTHONPATH=/workspace/transfer-learning \
            -v /$PWD/../transfer-learning:/workspace/transfer-learning \
-           -v /$PWD/../simsiam:/workspace/simsiam \
            -v /${CONFIG_DIR}:/workspace/configs \
            -v /${DATASET_DIR}:/workspace/data \
            -v /${OUTPUT_DIR}:/workspace/output \
@@ -177,7 +176,7 @@ docker run -a stdout ${DOCKER_RUN_ENVS} \
 
 Run the command below for fine-tuning and inference:
 ```bash
-python /workspace/anomaly_detection.py --config_file /workspace/configs/config.yaml
+python /workspace/anomaly_detection.py --config_file /workspace/configs/finetuning.yaml
 ```
 
 ### 7. Clean Up Docker Containers
@@ -198,6 +197,7 @@ chmod 700 get_helm.sh && \
 ### 2. Setting up K8s
 - Install [Argo Workflows](https://argoproj.github.io/argo-workflows/quick-start/) and [Argo CLI](https://github.com/argoproj/argo-workflows/releases)
 - Configure your [Artifact Repository](https://argoproj.github.io/argo-workflows/configure-artifact-repository/)
+- Ensure that your dataset and config files are present in your chosen artifact repository.
 ### 3. Install Workflow Template
 ```bash
 export NAMESPACE=argo
@@ -208,6 +208,31 @@ argo submit --from wftmpl/workspace --namespace=${NAMESPACE}
 To view your workflow progress
 ```bash
 argo logs @latest -f
+```
+
+## Expected Output
+```
+#### Processing ZIPPER dataset completed ########
+
++------------+------------------------+-------+--------------+
+|  Category  | Test set (Image count) | AUROC | Accuracy (%) |
++------------+------------------------+-------+--------------+
+|   BOTTLE   |           83           | 99.92 |    97.59     |
+|   CABLE    |          150           | 85.55 |     80.0     |
+|  CAPSULE   |          132           | 95.65 |    84.85     |
+|   CARPET   |          117           | 82.78 |    71.79     |
+|    GRID    |           78           | 84.71 |    83.33     |
+|  HAZELNUT  |          110           |  99.5 |    96.36     |
+|  LEATHER   |          124           | 100.0 |    100.0     |
+| METAL_NUT  |          115           | 89.49 |    76.52     |
+|    PILL    |          167           | 96.07 |    91.62     |
+|   SCREW    |          160           | 34.45 |     27.5     |
+|    TILE    |          117           |  95.6 |    91.45     |
+| TOOTHBRUSH |           42           | 97.22 |     88.1     |
+| TRANSISTOR |          100           | 93.83 |     82.0     |
+|    WOOD    |           79           | 99.12 |     96.2     |
+|   ZIPPER   |          151           |  96.4 |    92.05     |
++------------+------------------------+-------+--------------+
 ```
 
 ## Run Using Bare Metal

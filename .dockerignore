@@ -1,9 +1,10 @@
+.git
+.github
 __pycache__
 .vscode
 data
 dataset
-frameworks.ai.models.intel-models
-intel-models
+#intel-models
 models
 mvtec
 output
