@@ -73,18 +73,16 @@ The Vision Fine-tuning container must complete successfully before the Evaluatio
 ```mermaid
 %%{init: {'theme': 'dark'}}%%
 flowchart RL
-  Vsimsiam{{../simsiam}} x-. /workspace/workflows/vision_anomaly_detection/simsiam .-x stocktltfinetuning[stock-tlt-fine-tuning]
   VDATASETDIR{{"/${DATASET_DIR"}} x-. "-$PWD/../data}" .-x stocktltfinetuning
   VCONFIGDIR{{"/${CONFIG_DIR"}} x-. "-$PWD/../configs}" .-x stocktltfinetuning
   VOUTPUTDIR{{"/${OUTPUT_DIR"}} x-. "-$PWD/../output}" .-x stocktltfinetuning
-  Vsimsiam x-. /workspace/simsiam .-x stockevaluation[stock-evaluation]
   VDATASETDIR x-. "-$PWD/../data}" .-x stockevaluation
   VCONFIGDIR x-. "-$PWD/../configs}" .-x stockevaluation
   VOUTPUTDIR x-. "-$PWD/../output}" .-x stockevaluation
   stockevaluation --> stocktltfinetuning
 
   classDef volumes fill:#0f544e,stroke:#23968b
-  class Vsimsiam,VDATASETDIR,VCONFIGDIR,VOUTPUTDIR,Vsimsiam,VDATASETDIR,VCONFIGDIR,VOUTPUTDIR volumes
+  class Vsimsiam,VDATASETDIR,VCONFIGDIR,VOUTPUTDIR,,VDATASETDIR,VCONFIGDIR,VOUTPUTDIR volumes
 ```
 
 Run entire pipeline to view the logs of different running containers.
@@ -119,14 +117,13 @@ Create your own script and run your changes inside of the container or run the e
 ```mermaid
 %%{init: {'theme': 'dark'}}%%
 flowchart RL
-  Vsimsiam{{../simsiam}} x-. /workspace/simsiam .-x dev
   Vtransferlearning{{../transfer-learning}} x-. /workspace/transfer-learning .-x dev
   VCONFIGDIR{{"/${CONFIG_DIR"}} x-. "-$PWD/../configs}" .-x dev
   VDATASETDIR{{"/${DATASET_DIR"}} x-. "-$PWD/../data}" .-x dev
   VOUTPUTDIR{{"/${OUTPUT_DIR"}} x-. "-$PWD/output}" .-x dev
 
   classDef volumes fill:#0f544e,stroke:#23968b
-  class Vsimsiam,Vtransferlearning,VCONFIGDIR,VDATASETDIR,VOUTPUTDIR volumes
+  class Vtransferlearning,VCONFIGDIR,VDATASETDIR,VOUTPUTDIR volumes
 ```
 
 Run using Docker Compose.
