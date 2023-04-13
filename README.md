@@ -117,7 +117,7 @@ Create your own script and run your changes inside of the container or run the e
 ```mermaid
 %%{init: {'theme': 'dark'}}%%
 flowchart RL
-  Vtransferlearning{{../transfer-learning}} x-. /workspace/transfer-learning .-x dev
+  Vtransferlearning{{../transfer-learning}} x-.-x dev
   VCONFIGDIR{{"/${CONFIG_DIR"}} x-. "-$PWD/../configs}" .-x dev
   VDATASETDIR{{"/${DATASET_DIR"}} x-. "-$PWD/../data}" .-x dev
   VOUTPUTDIR{{"/${OUTPUT_DIR"}} x-. "-$PWD/output}" .-x dev
