@@ -67,7 +67,7 @@ docker compose run preprocess -e USER_CONSENT=y
 
 ### 5. Run Pipeline with Docker Compose
 
-The Vision Fine-tuning container must complete successfully before the Evaluation container can begin. The Evaluation container uses the model and checkpoint files created by the vision fine-tuning containers stored in the `${OUTPUT_DIR}` directory to complete evaluation tasks.
+The Vision Finetuning container must complete successfully before the Evaluation container can begin. The Evaluation container uses the model and checkpoint files created by the vision fine-tuning container stored in the `${OUTPUT_DIR}` directory to complete the evaluation tasks.
 
 
 ```mermaid
