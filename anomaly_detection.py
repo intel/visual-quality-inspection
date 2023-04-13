@@ -197,6 +197,7 @@ def main(config):
     model_config = config['model']
     fine_tune = config['fine_tune']
     if fine_tune:
+        global ad
         sys.path.append('frameworks.ai.transfer-learning/')
         from workflows.vision_anomaly_detection.src import anomaly_detection_wl as ad
         

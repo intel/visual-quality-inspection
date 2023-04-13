@@ -1,5 +1,5 @@
 num_workers: 32 # number of parallel threads to process the data
-fine_tune : false
+fine_tune : true
 saved_model_path: ./frameworks.ai.transfer-learning/workflows/vision_anomaly_detection/output/cutpaste_resnet50.pth.tar # path for saved model when user wants to use their custom model
 dataset:
   root_dir: /data/datah/pratool/pretrained/datasets/mvtec  # full path of root directory of MVTEC dataset
