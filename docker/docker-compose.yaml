@@ -1,0 +1,82 @@
+services:
+  preprocess:
+    build:
+      args:
+        http_proxy: ${http_proxy}
+        https_proxy: ${https_proxy}
+        no_proxy: ${no_proxy}
+      context: ../
+      dockerfile: ./docker/Dockerfile
+    command: python csv_generator_mvtec.py --path /workspace/data
+    environment:
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy}
+    image: intel/ai-workflows:beta-anomaly-detection
+    privileged: true
+    volumes:
+      - /${DATASET_DIR:-$PWD/../data}:/workspace/data
+    working_dir: /workspace
+
+  stock-tlt-fine-tuning:
+    build:
+      args:
+        http_proxy: ${http_proxy}
+        https_proxy: ${https_proxy}
+        no_proxy: ${no_proxy}
+      context: ../transfer-learning
+      dockerfile: workflows/vision_anomaly_detection/Dockerfile
+    command: python src/vision_anomaly_wrapper.py --config_file /workspace/configs/${CONFIG:-config}.yaml
+    environment: 
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy}
+      - PYTHONPATH=/workspace
+    image: intel/ai-workflows:beta-tlt-anomaly-detection
+    privileged: true
+    shm_size: 8GB
+    volumes: 
+      - ../simsiam:/workspace/workflows/vision_anomaly_detection/simsiam
+      - /${DATASET_DIR:-$PWD/../data}:/workspace/workflows/vision_anomaly_detection/data
+      - /${CONFIG_DIR:-$PWD/../configs}:/workspace/configs
+      - /${OUTPUT_DIR:-$PWD/../output}:/workspace/workflows/vision_anomaly_detection/output
+    working_dir: /workspace/workflows/vision_anomaly_detection
+  stock-evaluation:
+    command: python /workspace/anomaly_detection.py --config_file /workspace/configs/${CONFIG:-config}.yaml --evaluations
+    depends_on:
+      stock-tlt-fine-tuning:
+        condition: service_completed_successfully
+    environment: 
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy}
+      - PYTHONPATH=/workspace/transfer-learning
+    image: intel/ai-workflows:beta-anomaly-detection
+    privileged: true
+    shm_size: 8GB
+    volumes: 
+      - ../simsiam:/workspace/simsiam
+      - /${DATASET_DIR:-$PWD/../data}:/workspace/data
+      - /${CONFIG_DIR:-$PWD/../configs}:/workspace/configs
+      - /${OUTPUT_DIR:-$PWD/../output}:/workspace/output
+    working_dir: /workspace
+
+  dev:
+    command: python /workspace/${SCRIPT:-anomaly_detection.py} --config_file /workspace/configs/${CONFIG:-configs}.yaml--${PARAMETER:-evaluations}
+    environment: 
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy}
+      - PYTHONPATH=/workspace/transfer-learning
+    image: intel/ai-workflows:${TAG:-beta-anomaly-detection}
+    privileged: true
+    shm_size: 8GB
+    stdin_open: true
+    tty: true
+    volumes: 
+      - ../simsiam:/workspace/simsiam
+      - ../frameworks.ai.transfer-learning:/workspace/transfer-learning
+      - /${CONFIG_DIR:-$PWD/../configs}:/workspace/configs
+      - /${DATASET_DIR:-$PWD/../data}:/workspace/data
+      - /${OUTPUT_DIR:-$PWD/output}:/workspace/output
+    working_dir: /workspace

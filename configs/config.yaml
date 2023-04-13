@@ -4,6 +4,8 @@ saved_model_path: ./frameworks.ai.transfer-learning/workflows/vision_anomaly_det
 dataset:
   root_dir: /data/datah/pratool/pretrained/datasets/mvtec  # full path of root directory of MVTEC dataset
   category_type: hazelnut # category type within MVTEC dataset, i.e. hazelnut or all (for running all categories in MVTEC)
+  root_dir: ./data  # full path of root directory of MVTEC dataset
+  category_type: hazelnut # category type within MVTEC dataset
   batch_size: 32 # inference batch size
   image_size: 224 # each image resized to this size (224x224)
 model: 
@@ -18,9 +20,9 @@ simsiam:
   batch_size: 64 # fine-tuning batch size
   epochs: 2 # number of epochs to fine-tune the model
   optim: 'sgd' # optimizer
-  model_path: './models/' # path to save the checkpoints or final model
+  model_path: './output' # path to save the checkpoints or final model
   ckpt: true  # flag for whether intermediate checkpoints would be saved or not
-  initial_ckpt: '/data/datah/pratool/frameworks.ai.end2end-ai-pipelines.anomaly-detection-ref-use-case/simsiam/checkpoint_0099.pth.tar'
+  initial_ckpt: './simsiam/checkpoint_0099.pth.tar'
 cutpaste:
   cutpaste_type: '3way' # choices are ['normal', 'scar', '3way', 'union'] for image augmentation
   head_layer: 2 # number of perceptron layers appended towards the end of ResNet layers
@@ -28,7 +30,7 @@ cutpaste:
   batch_size: 64 # fine-tuning batch size
   epochs: 2 # number of epochs to fine-tune the model
   optim: 'sgd' # optimizer
-  model_path: './models/' # path to save the checkpoints or final model
+  model_path: './output' # path to save the checkpoints or final model
   ckpt: true # flag for whether intermediate checkpoints would be saved or not
 pca:
   pca_thresholds: 0.99 # PCA select number of components such that it ensures to retain the variance ratio specified

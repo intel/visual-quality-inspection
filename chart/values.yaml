@@ -1,0 +1,17 @@
+metadata:
+  name: anomaly-detection
+proxy: nil
+image:
+  base: intel/ai-workflows
+  tlt: beta-tlt-anomaly-detection
+  use_case: beta-anomaly-detection
+workflow:
+  config: config
+dataset:
+  type: <nfs/s3>
+  nfs:
+    server: nil
+    path: nil
+    subPath: nil
+  s3:
+    key: nil
