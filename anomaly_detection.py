@@ -216,7 +216,12 @@ def main(config):
         print("Accuracy {}% on test images".format(accuracy))
         return [dataset_config['category_type'],len(dataset.test_subset),auroc,accuracy]
     else:
-        model = load_custom_model(config['saved_model_path'],model_config)
+        if config['dataset']['category_type'] == 'all':
+            path =  os.path.join(os.path.basename(config['saved_model_path']), config['model']['feature_extractor']+'_'
+                                 +config['model']['name']+'_'+config['dataset']['category_type']+'.pth.tar')
+            model = load_custom_model(path,model_config)
+        else:
+            model = load_custom_model(config['saved_model_path'],model_config)
         trainset = Mvtec(dataset_config['root_dir'],object_type=dataset_config['category_type'],split='train',
                         im_size=dataset_config['image_size'])
         testset = Mvtec(dataset_config['root_dir'],object_type=dataset_config['category_type'],split='test',
