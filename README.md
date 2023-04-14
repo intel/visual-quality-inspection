@@ -1,4 +1,14 @@
-# Mt. Whitney Reference Use Case: Anomaly Detection
+# Anomaly Detection: Visual Quality Inspection
+
+## **Table of Contents**
+- [Overview](#overview)
+- [Hardware Requirements](#hardware-requirements)
+- [Software Requirements](#software-requirements)
+- [How it Works?](#how-it-works)
+- [Get Started](#get-started)
+
+## Overview
+Add Overview
 
 ## Hardware Requirements
 There are workflow-specific hardware and software setup requirements depending on how the workflow is run. Bare metal development system and Docker image running locally have the same system requirements. 
@@ -7,6 +17,41 @@ There are workflow-specific hardware and software setup requirements depending o
 | ---------------------------- | ---------- |
 | Intel® 4th Gen Xeon® Scalable Performance processors| FP32, BF16 |
 | Intel® 1st, 2nd, 3rd, and 4th Gen Xeon® Scalable Performance processors| FP32 |
+
+## Software Requirements 
+Linux OS (Ubuntu 20.04) is used in this reference solution. Make sure the following dependencies are installed.
+
+1. `sudo apt update`
+1. Python3.9, Pip/Conda and python3.9-venv
+1. git
+
+## How It Works?
+Add write-up
+
+
+## Get Started
+### Download the Workflow Repository
+Create a working directory for the reference use case and clone the [Visual Quality Inspection Workflow](https://github.com/intel/visual-quality-inspection) repository into your working directory.
+```
+* Remove this line in final release *
+git clone https://github.com/intel-innersource/frameworks.ai.end2end-ai-pipelines.anomaly-detection-ref-use-case.git
+cd frameworks.ai.end2end-ai-pipelines.anomaly-detection-ref-use-case
+
+git clone https://github.com/intel/visual-quality-inspection
+cd visual-quality-inspection
+```
+
+### Download the Transfer Learning Tool (TLT)
+```
+* Remove this line in final release *
+git clone https://github.com/intel-innersource/frameworks.ai.transfer-learning.git
+git checkout pratool/anomaly_detection
+
+git clone https://github.com/IntelAI/transfer-learning.git
+
+```
+
+
 
 ## Ways to run this reference use case
 This reference kit offers three options for running the fine-tuning and inference processes:
@@ -247,12 +292,6 @@ conda activate hls_env
    pip install -r requirements.txt
    ```
 
-### 2. Clone the Anomaly Detection reference use case repository
-   ```
-   git clone https://github.com/intel-innersource/frameworks.ai.end2end-ai-pipelines.anomaly-detection-ref-use-case.git
-   cd frameworks.ai.end2end-ai-pipelines.anomaly-detection-ref-use-case
-   ```
-
 ### 2. Create ~~conda~~ pip venv and install software packages
    ```
    #conda create -n anomaly_det_refkit python=3.9
@@ -260,12 +299,6 @@ conda activate hls_env
    python3 -m venv venv
    source venv/bin/activate
    pip install -r requirements.txt
-   ```
-
-### 3. Download the Transfer Learning Toolkit (TLT)
-   ```
-   git clone https://github.com/intel-innersource/frameworks.ai.transfer-learning.git
-   git checkout pratool/anomaly_detection
    ```
 
 ### 4. Download and prepare the dataset
