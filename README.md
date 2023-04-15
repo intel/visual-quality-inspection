@@ -184,7 +184,7 @@ docker compose run dev
 | CONFIG_DIR | `$PWD/../configs` | Anomaly Detection Configurations directory |
 | DATASET_DIR | `$PWD/../data` | Preprocessed Dataset |
 | OUTPUT_DIR | `$PWD/output` | Logfile and Checkpoint output |
-| SCRIPT | `hls_wrapper.py` | Name of Script |
+| SCRIPT | `anomaly_detection.py` | Name of Script |
 
 #### Run Docker Image in an Interactive Environment
 
