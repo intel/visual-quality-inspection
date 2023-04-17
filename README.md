@@ -1,4 +1,8 @@
-# Anomaly Detection: Visual Quality Inspection
+# Anomaly Detection: Visual Quality Inspection in the Industrial Domain
+
+The goal of anomaly detection is to identify rare, abnormal events such as defects in a part being manufactured on an industrial production line by observing the data. Manual anomaly detection is time and labor-intensive and as a result artificial intelligence is transforming the industrial domain by enabling higher productivity, better insights, less downtime, and superior product quality. However, there are certain challenges: (1) feature engineering needs to be performed to extract representations from the raw data. Traditional machine learning techniques rely on hand-crafted features that may not always generalize well to other settings. (2) Classification techniques require labeled training data, which is challenging because anomalies are typically rare occurrences and obtaining it significantly increases the data collection and annotation effort. (3) The nature of anomalies in industrial setup can be arbitrary and unknown where failures or defects occur for a variety of unpredictable reasons, hence it may not be possible to predict the type of anomaly.
+
+To overcome these challenges and achieve state-of-the-art performance, we present an unsupervised mixed method (using both deep learning & classical ML) End-to-End Fine-Tuning & Inference reference solution for anomaly detection where a model of normality is learned from defect-free data in an unsupervised manner, and deviations from the models are flagged as anomalies. This reference use case is accelerated by Intel optimized software and is built upon easy-to-use Intel Transfer Learning Tool APIs.
 
 ## **Table of Contents**
 - [Overview](#overview)
