@@ -6,7 +6,9 @@ image:
   tlt: beta-tlt-anomaly-detection
   use_case: beta-anomaly-detection
 workflow:
-  config: config
+  config:
+    training: finetuning
+    inference: eval
 dataset:
   type: <nfs/s3>
   nfs:

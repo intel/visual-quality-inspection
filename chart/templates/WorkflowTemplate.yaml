@@ -6,21 +6,22 @@ spec:
   templates:
     - name: main
       steps:
-      - name: tlt-fine-tuning
-        template: tlt-anomaly-detection
-      - name: evaluation
-        template: anomaly-detection
-        dependencies:
-          - tlt-fine-tuning
-        failFast: true
-    - name: tlt-fine-tuning
+      -   - name: tlt-fine-tuning
+            template: tlt-anomaly-detection
+      -   - name: evaluation
+            template: anomaly-detection
+    - name: tlt-anomaly-detection
       inputs:
         {{- if eq .Values.dataset.type "s3" }}
         artifacts:
           - name: dataset
-            path: /workspace/data
+            path: /workspace/workflows/vision_anomaly_detection/data
             s3:
-              key: {{ .Values.dataset.s3.key }}
+              key: '{{ .Values.dataset.s3.key }}/mvtec'
+          - name: config
+            path: /workspace/config
+            s3:
+              key: '{{ .Values.dataset.s3.key }}/configs'
         {{ end }}
       outputs:
         artifacts:
@@ -35,7 +36,7 @@ spec:
         args:
           - 'src/vision_anomaly_wrapper.py'
           - '--config_file'
-          - '/workspace/configs/{{ .Values.workflow.config }}.yaml'
+          - '/workspace/config/{{ .Values.workflow.config.training }}.yaml'
         env:
           - name: http_proxy
             value: '{{"{{workflow.parameters.http_proxy}}"}}'
@@ -45,13 +46,16 @@ spec:
           - name: dshm
             mountPath: /dev/shm
           - name: output-dir
-            mountPath: /workspace/output
+            mountPath: /workspace/workflows/vision_anomaly_detection/output
         {{ if eq .Values.dataset.type "nfs" }}
           - name: dataset-dir
-            mountPath: /workspace/data
-            subPath: {{ .Values.dataset.nfs.subPath }}
+            mountPath: /workspace/workflows/vision_anomaly_detection/data
+            subPath: '{{ .Values.dataset.nfs.subPath }}/mvtec'
+          - name: config-dir
+            mountPath: /workspace/config
+            subPath: '{{ .Values.dataset.nfs.subPath }}/configs'
         {{ end }}
-        workingDir: /workspace/workflows/vision_anomaly_detection
+        workingDir: /workspace
         imagePullPolicy: Always
       volumes:
       - name: dshm
@@ -59,6 +63,11 @@ spec:
           medium: Memory
       {{ if eq .Values.dataset.type "nfs" }}
       - name: dataset-dir
+        nfs: 
+          server: {{ .Values.dataset.nfs.server }}
+          path: {{ .Values.dataset.nfs.path }}
+          readOnly: true
+      - name: config-dir
         nfs: 
           server: {{ .Values.dataset.nfs.server }}
           path: {{ .Values.dataset.nfs.path }}
@@ -71,7 +80,11 @@ spec:
           - name: dataset
             path: /workspace/data
             s3:
-              key: {{ .Values.dataset.s3.key }}
+              key: '{{ .Values.dataset.s3.key }}/mvtec'
+          - name: config
+            path: /workspace/config
+            s3:
+              key: '{{ .Values.dataset.s3.key }}/configs'
         {{ end }}
       outputs:
         artifacts:
@@ -86,8 +99,7 @@ spec:
         args:
         - '/workspace/anomaly_detection.py'
         - '--config_file' 
-        - '/workspace/configs/{{ .Values.workflow.config }}.yaml'
-        - '--evaluations'
+        - '/workspace/config/{{ .Values.workflow.config.inference }}.yaml'
         env:
           - name: http_proxy
             value: '{{"{{workflow.parameters.http_proxy}}"}}'
@@ -97,11 +109,14 @@ spec:
           - name: dshm
             mountPath: /dev/shm
           - name: output-dir
-            mountPath: /workspace/checkpoint
+            mountPath: /workspace/output
         {{ if eq .Values.dataset.type "nfs" }}
           - name: dataset-dir
             mountPath: /workspace/data
-            subPath: {{ .Values.dataset.nfs.subPath }}
+            subPath: '{{ .Values.dataset.nfs.subPath }}/mvtec'
+          - name: config-dir
+            mountPath: /workspace/config
+            subPath: '{{ .Values.dataset.nfs.subPath }}/configs'
         {{ end }}
         workingDir: /workspace/workflows/vision_anomaly_detection
         imagePullPolicy: Always
@@ -111,6 +126,11 @@ spec:
           medium: Memory
       {{ if eq .Values.dataset.type "nfs" }}
       - name: dataset-dir
+        nfs: 
+          server: {{ .Values.dataset.nfs.server }}
+          path: {{ .Values.dataset.nfs.path }}
+          readOnly: true
+      - name: config-dir
         nfs: 
           server: {{ .Values.dataset.nfs.server }}
           path: {{ .Values.dataset.nfs.path }}

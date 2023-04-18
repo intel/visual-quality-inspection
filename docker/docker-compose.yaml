@@ -7,16 +7,17 @@ services:
         no_proxy: ${no_proxy}
       context: ../
       dockerfile: ./docker/Dockerfile
-    command: python csv_generator_mvtec.py --path /workspace/data
+    command: python /workspace/intel-models/datasets/dataset_api/dataset.py -n mvtec-ad --download --preprocess -d /workspace/data
     environment:
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
       - no_proxy=${no_proxy}
+      - USER_CONSENT=${USER_CONSENT}
     image: intel/ai-workflows:beta-anomaly-detection
     privileged: true
     volumes:
       - /${DATASET_DIR:-$PWD/../data}:/workspace/data
-    working_dir: /workspace
+    working_dir: /workspace/intel-models/datasets/dataset_api
 
   stock-tlt-fine-tuning:
     build:
@@ -26,7 +27,7 @@ services:
         no_proxy: ${no_proxy}
       context: ../transfer-learning
       dockerfile: workflows/vision_anomaly_detection/Dockerfile
-    command: python src/vision_anomaly_wrapper.py --config_file /workspace/configs/${CONFIG:-config}.yaml
+    command: python src/vision_anomaly_wrapper.py --config_file /workspace/configs/${CONFIG:-finetuning}.yaml
     environment: 
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
@@ -36,13 +37,12 @@ services:
     privileged: true
     shm_size: 8GB
     volumes: 
-      - ../simsiam:/workspace/workflows/vision_anomaly_detection/simsiam
       - /${DATASET_DIR:-$PWD/../data}:/workspace/workflows/vision_anomaly_detection/data
       - /${CONFIG_DIR:-$PWD/../configs}:/workspace/configs
       - /${OUTPUT_DIR:-$PWD/../output}:/workspace/workflows/vision_anomaly_detection/output
     working_dir: /workspace/workflows/vision_anomaly_detection
   stock-evaluation:
-    command: python /workspace/anomaly_detection.py --config_file /workspace/configs/${CONFIG:-config}.yaml --evaluations
+    command: python /workspace/anomaly_detection.py --config_file /workspace/configs/${CONFIG:-eval}.yaml
     depends_on:
       stock-tlt-fine-tuning:
         condition: service_completed_successfully
@@ -55,14 +55,13 @@ services:
     privileged: true
     shm_size: 8GB
     volumes: 
-      - ../simsiam:/workspace/simsiam
       - /${DATASET_DIR:-$PWD/../data}:/workspace/data
       - /${CONFIG_DIR:-$PWD/../configs}:/workspace/configs
       - /${OUTPUT_DIR:-$PWD/../output}:/workspace/output
     working_dir: /workspace
 
   dev:
-    command: python /workspace/${SCRIPT:-anomaly_detection.py} --config_file /workspace/configs/${CONFIG:-configs}.yaml--${PARAMETER:-evaluations}
+    command: python /workspace/${SCRIPT:-anomaly_detection.py} --config_file /workspace/configs/${CONFIG:-eval}.yaml
     environment: 
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
@@ -74,7 +73,6 @@ services:
     stdin_open: true
     tty: true
     volumes: 
-      - ../simsiam:/workspace/simsiam
       - ../frameworks.ai.transfer-learning:/workspace/transfer-learning
       - /${CONFIG_DIR:-$PWD/../configs}:/workspace/configs
       - /${DATASET_DIR:-$PWD/../data}:/workspace/data

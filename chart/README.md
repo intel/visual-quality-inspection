@@ -18,5 +18,5 @@ A Helm chart for Kubernetes
 | image.use_case | string | `"beta-anomaly-detection"` | evaluation container tag |
 | metadata.name | string | `"anomaly-detection"` |  |
 | proxy | string | `"nil"` |  |
-| workflow.config | string | `"config"` | name of config file |
-
+| workflow.config.inference | string | `"eval"` | config file name for inference |
+| workflow.config.training | string | `"finetuning"` | config file name for training |

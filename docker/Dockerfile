@@ -1,8 +1,10 @@
-FROM amr-registry.caas.intel.com/aiops/transfer-learning:prod
+FROM amr-registry.caas.intel.com/aiops/transfer-learning:prod-r0.4
 
 COPY . /workspace
 
 WORKDIR /workspace
+
+RUN python -m pip install --no-cache-dir -r /workspace/intel-models/datasets/dataset_api/requirements.txt
 
 RUN python -m pip install --no-cache-dir -r /workspace/transfer-learning/workflows/vision_anomaly_detection/requirements.txt
 
