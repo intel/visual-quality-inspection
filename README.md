@@ -348,30 +348,24 @@ argo logs @latest -f
 ```
 
 ## Run Using Bare Metal
-### 1. Create Conda Environment 
+
+### 1. Create environment and install software packages
+
+Using conda:
 ```
-conda create --name hls_env python=3.9
-conda activate hls_env
+conda create -n anomaly_det_refkit python=3.9
+conda activate anomaly_det_refkit
+pip install -r requirements.txt
 ```
 
+using virtualenv:
+```
+python3 -m venv anomaly_det_refkit
+source anomaly_det_refkit/bin/activate
+pip install -r requirements.txt
+```
 
-### 1. Create conda env and install software packages
-   ```
-   conda create -n anomaly_det_refkit python=3.9
-   conda activate anomaly_det_refkit
-   pip install -r requirements.txt
-   ```
-
-### 2. Create ~~conda~~ pip venv and install software packages
-   ```
-   #conda create -n anomaly_det_refkit python=3.9
-   #conda activate anomaly_det_refkit
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
-
-### 5. Feature Extractor
+### 2. Select parameters and configurations
 
    We have three feature extractor options.
    ```
@@ -387,25 +381,20 @@ conda activate hls_env
    ```
    Third - Pretrained - No fine-tuning and just use pretrained ResNet50/ResNet18 model for feature extraction
    ```
-### 6. Running the workload with custom model
+### 3. Running the end-to-end use case 
 
-   ```
-   In config.yaml, change 'fine_tune' flag to false and provide a custom model path under 'saved_model_path' 
+Using Transfer Learning Tool based fine-tuning:
 
-   python anomaly_detection.py --config_file ./configs/config.yaml
+In config.yaml, change 'fine_tune' flag to true and set the simsiam/cutpaste settings accordingly
+Change other settings in config.yaml to run different configurations
+```
+python anomaly_detection.py --config_file ./configs/config.yaml
+```
 
-   Change other settings in config.yaml to run different configurations 
+Using a pre-trained customized model:
 
-   ```
-
-### 7. Running the workload with TLT fine-tuned model
-
-   ```
-   In config.yaml, change 'fine_tune' flag to true and set the simsiam/cutpaste settings accordingly
-
-   python anomaly_detection.py --config_file ./configs/config.yaml
-
-   Change other settings in config.yaml to run different configurations
-
-   ```
-
+In config.yaml, change 'fine_tune' flag to false and provide a custom model path under 'saved_model_path'
+Change other settings in config.yaml to run different configurations
+```
+python anomaly_detection.py --config_file ./configs/config.yaml
+```
