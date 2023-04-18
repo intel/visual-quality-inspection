@@ -16,5 +16,31 @@ Please set the following in the finetuning.yaml file:
   * **batch_size:** batch size for inference (Default=32)
   * **image_size:** each image resized to this size (Default=224x224)
 
+* **model:** Options to select when running with a pre-trained backbone, no fine-tuning on custom dataset
+  * **name:** pretrained backbone model E.g.: resnet50, resnet18
+  * **layer:** intermediate layer from which features will be extracted
+  * **pool:** pooling kernel size for average pooling
+  * **feature_extractor:** select the type of modelling and subsequent feature extractor. Options are:
+    * pretrained -  No fine-tuning on custom dataset, features will be extracted from pretrained model which is set in model/name
+    * simsiam - SimSiam self-supervised training on custom dataset
+    * cutpaste - CutPaste self-supervised training on custom dataset 
 
+* **simsiam:** Set when 'feature_extractor' is set to simsiam.
+  * **batch_size:** batch size for fine-tuning (Default=64)
+  * **epochs:** number of epochs to fine-tune the model
+  * **optim:** optimization algorithm E.g.: sgd, adam
+  * **model_path:** path to save the checkpoints or final model
+  * **ckpt:** flag to specify whether intermediate checkpoints should be saved or not
+
+* **cutpaste:** Set when 'feature_extractor' is set to cutpaste.
+  * **cutpaste_type:**
+  * **head_layer:**
+  * **freeze_resnet:**
+  * **batch_size:** batch size for fine-tuning (Default=64)
+  * **epochs:** number of epochs to fine-tune the model
+  * **optim:** optimization algorithm E.g.: sgd, adam
+  * **model_path:** path to save the checkpoints or final model
+  * **ckpt:** flag to specify whether intermediate checkpoints should be saved or not
+
+* **pca_thresholds:** percentage of variance ratio to be retained. Number of PCA components are selected according to it
 
