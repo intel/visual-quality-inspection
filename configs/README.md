@@ -4,7 +4,7 @@ Please set the following in the finetuning.yaml file:
 
 * **num_workers:** number of sub-processes or threads to use for data loading. Setting the argument num_workers as a positive integer will turn on multi-process data loading. (Default=32)
 
-* **fine_tune:** set 'True' to run SimSiam or CutPaste self-supervised learning using Intel Transfer Learning Tool APIs. Set 'False' to run a pre-trained backbone by providing a model path under 'saved_model_path' category
+* **fine_tune:** set 'True' to run SimSiam or CutPaste self-supervised learning using Intel Transfer Learning Tool APIs. Set 'False' to run a pre-trained backbone by providing a model path under 'model_path' category
 
 * **output_path:** path to save the checkpoints or final model
 
@@ -25,17 +25,17 @@ Please set the following in the finetuning.yaml file:
     * simsiam - SimSiam self-supervised training on custom dataset
     * cutpaste - CutPaste self-supervised training on custom dataset 
 
-* **simsiam:** Set when 'feature_extractor' is set to simsiam.
+* **simsiam:** Set when 'feature_extractor' is set to simsiam. For details about simsiam method, please refer to https://arxiv.org/abs/2011.10566
   * **batch_size:** batch size for fine-tuning (Default=64)
   * **epochs:** number of epochs to fine-tune the model
   * **optim:** optimization algorithm E.g.: sgd, adam
   * **model_path:** path to save the checkpoints or final model
   * **ckpt:** flag to specify whether intermediate checkpoints should be saved or not
 
-* **cutpaste:** Set when 'feature_extractor' is set to cutpaste.
-  * **cutpaste_type:**
-  * **head_layer:**
-  * **freeze_resnet:**
+* **cutpaste:** Set when 'feature_extractor' is set to cutpaste. For details about cutpaste method, please refer to https://arxiv.org/abs/2104.04015
+  * **cutpaste_type:**  type of image augmentation for cutpaste fine-tuning, choices are ['normal', 'scar', '3way', 'union'].
+  * **head_layer:**     number of fully-connected layers on top of average pooling layer followed by the last linear layer of backbone network
+  * **freeze_resnet:**  number of epochs till only head layers will be trained. After this, complete network will be trained.
   * **batch_size:** batch size for fine-tuning (Default=64)
   * **epochs:** number of epochs to fine-tune the model
   * **optim:** optimization algorithm E.g.: sgd, adam
