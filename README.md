@@ -16,6 +16,7 @@ The goal of anomaly detection is to identify rare, abnormal events such as defec
 - [Run Using Docker](#run-using-docker)
 - [Run Using Argo Workflows on K8s using Helm](#run-using-argo-workflows-on-k8s-using-helm)
 - [Run Using Bare Metal](#run-using-bare-metal) 
+- [Expected Output](#expected-output)
 - [Summary and Next Steps](#summary-and-next-steps)
 - [Learn More](#learn-more)
 - [Support](#support)
@@ -329,31 +330,6 @@ To view your workflow progress
 argo logs @latest -f
 ```
 
-## Expected Output
-```
-#### Processing ZIPPER dataset completed ########
-
-+------------+------------------------+-------+--------------+
-|  Category  | Test set (Image count) | AUROC | Accuracy (%) |
-+------------+------------------------+-------+--------------+
-|   BOTTLE   |           83           | 99.92 |    97.59     |
-|   CABLE    |          150           | 85.55 |     80.0     |
-|  CAPSULE   |          132           | 95.65 |    84.85     |
-|   CARPET   |          117           | 82.78 |    71.79     |
-|    GRID    |           78           | 84.71 |    83.33     |
-|  HAZELNUT  |          110           |  99.5 |    96.36     |
-|  LEATHER   |          124           | 100.0 |    100.0     |
-| METAL_NUT  |          115           | 89.49 |    76.52     |
-|    PILL    |          167           | 96.07 |    91.62     |
-|   SCREW    |          160           | 34.45 |     27.5     |
-|    TILE    |          117           |  95.6 |    91.45     |
-| TOOTHBRUSH |           42           | 97.22 |     88.1     |
-| TRANSISTOR |          100           | 93.83 |     82.0     |
-|    WOOD    |           79           | 99.12 |     96.2     |
-|   ZIPPER   |          151           |  96.4 |    92.05     |
-+------------+------------------------+-------+--------------+
-```
-
 ## Run Using Bare Metal
 
 ### 1. Create environment and install software packages
@@ -398,6 +374,30 @@ In finetuning.yaml, change 'fine_tune' flag to false and provide a custom model 
 Change other settings in config.yaml to run different configurations
 ```
 python anomaly_detection.py --config_file ./configs/finetuning.yaml
+```
+
+## Expected Output
+
+```
++------------+------------------------+-------+--------------+
+|  Category  | Test set (Image count) | AUROC | Accuracy (%) |
++------------+------------------------+-------+--------------+
+|   BOTTLE   |           83           | 100.0 |    100.0     |
+|   CABLE    |          150           | 96.08 |    87.33     |
+|  CAPSULE   |          132           | 92.62 |    96.21     |
+|   CARPET   |          117           | 87.72 |    79.49     |
+|    GRID    |           78           | 90.98 |    87.18     |
+|  HAZELNUT  |          110           | 99.57 |    96.36     |
+|  LEATHER   |          124           |  99.8 |    98.39     |
+| METAL_NUT  |          115           | 92.38 |    86.96     |
+|    PILL    |          167           | 96.92 |    91.02     |
+|   SCREW    |          160           | 83.97 |    78.75     |
+|    TILE    |          117           | 97.69 |    97.44     |
+| TOOTHBRUSH |           42           | 97.78 |    95.24     |
+| TRANSISTOR |          100           | 96.46 |     90.0     |
+|    WOOD    |           79           | 97.72 |    93.67     |
+|   ZIPPER   |          151           | 98.19 |    88.74     |
++------------+------------------------+-------+--------------+
 ```
 
 ## Summary and Next Steps
