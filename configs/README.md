@@ -1,4 +1,4 @@
-# Setting parameters and configurations for the visual quality inspection use case
+# Setting parameters and configurations
 
 Please set the following in the finetuning.yaml file:
 

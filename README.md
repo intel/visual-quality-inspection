@@ -374,25 +374,20 @@ pip install -r requirements.txt
 
 ### 2. Select parameters and configurations
 
-   We have three feature extractor options.
-   ```
-   First - SimSiam - A self-supervised method that takes ResNet50 model as backbone and fine-tune the model on custom dataset to get better feature embedding
-   ```
-   Download the Sim-Siam weights based on ResNet50 model and place under simsiam directory
-   ```
-   wget https://dl.fbaipublicfiles.com/simsiam/models/100ep-256bs/pretrain/checkpoint_0099.pth.tar -o ./simsiam/checkpoint_0099.pth.tar
-   ```
-   ```
-   Second - Cut-paste - A self-supervised method that takes ResNet50/ ResNet18 model as backbone and fine-tune the model on custom dataset to get better feature embedding
-   ```
-   ```
-   Third - Pretrained - No fine-tuning and just use pretrained ResNet50/ResNet18 model for feature extraction
+Select the parameters and configurations in the [finetuning.yaml](configs/README.md) file
+
+NOTE: 
+When using SimSiam self supervised training, download the Sim-Siam weights based on ResNet50 model and place under simsiam directory
+```
+wget https://dl.fbaipublicfiles.com/simsiam/models/100ep-256bs/pretrain/checkpoint_0099.pth.tar -o ./simsiam/checkpoint_0099.pth.tar
+```
+
    ```
 ### 3. Running the end-to-end use case 
 
 Using Transfer Learning Tool based fine-tuning:
 
-In config.yaml, change 'fine_tune' flag to true and set the simsiam/cutpaste settings accordingly
+In finetuning.yaml, change 'fine_tune' flag to true and set the simsiam/cutpaste settings accordingly
 Change other settings in config.yaml to run different configurations
 ```
 python anomaly_detection.py --config_file ./configs/config.yaml
@@ -400,7 +395,7 @@ python anomaly_detection.py --config_file ./configs/config.yaml
 
 Using a pre-trained customized model:
 
-In config.yaml, change 'fine_tune' flag to false and provide a custom model path under 'saved_model_path'
+In finetuning.yaml, change 'fine_tune' flag to false and provide a custom model path under 'saved_model_path'
 Change other settings in config.yaml to run different configurations
 ```
 python anomaly_detection.py --config_file ./configs/config.yaml
