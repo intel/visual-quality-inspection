@@ -389,7 +389,7 @@ Using Transfer Learning Tool based fine-tuning:
 In finetuning.yaml, change 'fine_tune' flag to true and set the simsiam/cutpaste settings accordingly
 Change other settings in config.yaml to run different configurations
 ```
-python anomaly_detection.py --config_file ./configs/config.yaml
+python anomaly_detection.py --config_file ./configs/finetuning.yaml
 ```
 
 Using a pre-trained customized model:
@@ -397,7 +397,7 @@ Using a pre-trained customized model:
 In finetuning.yaml, change 'fine_tune' flag to false and provide a custom model path under 'saved_model_path'
 Change other settings in config.yaml to run different configurations
 ```
-python anomaly_detection.py --config_file ./configs/config.yaml
+python anomaly_detection.py --config_file ./configs/finetuning.yaml
 ```
 
 ## Summary and Next Steps
