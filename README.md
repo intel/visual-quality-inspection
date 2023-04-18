@@ -382,7 +382,6 @@ When using SimSiam self supervised training, download the Sim-Siam weights based
 wget https://dl.fbaipublicfiles.com/simsiam/models/100ep-256bs/pretrain/checkpoint_0099.pth.tar -o ./simsiam/checkpoint_0099.pth.tar
 ```
 
-   ```
 ### 3. Running the end-to-end use case 
 
 Using Transfer Learning Tool based fine-tuning:
