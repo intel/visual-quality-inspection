@@ -16,7 +16,9 @@ The goal of anomaly detection is to identify rare, abnormal events such as defec
 - [Run Using Docker](#run-using-docker)
 - [Run Using Argo Workflows on K8s using Helm](#run-using-argo-workflows-on-k8s-using-helm)
 - [Run Using Bare Metal](#run-using-bare-metal) 
-
+- [Summary and Next Steps](#summary-and-next-steps)
+- [Learn More](#learn-more)
+- [Support](#support)
 
 ## Overview
 Classic and modern anomaly detection techniques have certain challenges: 
@@ -403,3 +405,16 @@ Change other settings in config.yaml to run different configurations
 ```
 python anomaly_detection.py --config_file ./configs/config.yaml
 ```
+
+## Summary and Next Steps
+
+
+## Learn More
+For more information or to read about other relevant workflow examples, see these guides and software resources:
+- [Intel® AI Analytics Toolkit (AI Kit)](https://www.intel.com/content/www/us/en/developer/tools/oneapi/ai-analytics-toolkit.html)
+- [Intel® Neural Compressor](https://github.com/intel/neural-compressor)
+- [Intel® Extension for PyTorch](https://intel.github.io/intel-extension-for-pytorch/)
+- [Intel® Transfer Learning Tool](https://github.com/IntelAI/models/tree/master/docs/notebooks/notebooks/e2e_workflows/Anomaly_Detection_MVTec.ipynb)
+
+## Support
+If you have any questions with this workflow, want help with troubleshooting, want to report a bug or submit enhancement requests, please submit a GitHub issue
