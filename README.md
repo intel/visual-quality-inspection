@@ -53,7 +53,7 @@ The use case provides 3 options for network modelling of the vision subtask:
 * **Cut-Paste self-supervised learning:** is a contrastive learning method similar to SimSiam but differs in the augmentations used during training. It take a ResNet model as backbone and fine-tunes the model after applying a data augmentation strategy that cuts an image patch and pastes at a random location of a large image. This allows us to construct a high performance model for defect detection without presence of anomalous data. Read more [here](https://arxiv.org/pdf/2104.04015.pdf)
 
 ![visual_quality_inspection_pipeline](assets/visual_quality_inspection_pipeline.JPG)
-Figure 1: Visual quality inspection pipeline. Above diagram is an example when using SimSiam self-supervised training
+*Figure 1: Visual quality inspection pipeline. Above diagram is an example when using SimSiam self-supervised training*
 
 Training stage only uses defect-free data. Images are loaded using a dataloader and shuffling, resizing & normalization processing is applied. Then one of the above stated transfer learning technique is used to fine-tune a model and extract discriminative features from an intermediate layer. A PCA kernel is trained over these features to reduce the dimension of the feature space while retaining 99% variance. This pre-processing of the intermediate features of a DNN is needed to prevent matrix singularities and rank deficiencies from arising.
 
@@ -99,7 +99,7 @@ More information can be in the paper [MVTec AD – A Comprehensive Real-World Da
 
 ![Statistical_overview_of_the_MVTec_AD_dataset](assets/mvtec_dataset_characteristics.JPG)
 
-Table 1:  Statistical overview of the MVTec AD dataset. For each category, the number of training and test images is given together with additional information about the defects present in the respective test images.[Source](https://www.mvtec.com/fileadmin/Redaktion/mvtec.com/company/research/datasets/mvtec_ad.pdf)
+*Table 1:  Statistical overview of the MVTec AD dataset. For each category, the number of training and test images is given together with additional information about the defects present in the respective test images.[Source](https://www.mvtec.com/fileadmin/Redaktion/mvtec.com/company/research/datasets/mvtec_ad.pdf)*
 
 
 #### Download the data
