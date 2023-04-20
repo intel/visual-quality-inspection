@@ -159,6 +159,7 @@ Build or Pull the provided docker image.
 
 ```bash
 git submodule update --init --recursive
+git clone https://github.com/IntelAI/models -b r2.11 intel-models
 cd docker
 docker compose build
 ```
@@ -172,6 +173,7 @@ docker pull intel/ai-workflows:beta-tlt-anomaly-detection
 Prepare dataset for Anomaly Detection workflows and accept the legal agreement to use the Intel Dataset Downloader.
 
 ```bash
+git clone https://github.com/IntelAI/models -b r2.11 intel-models
 cd docker
 docker compose run preprocess -e USER_CONSENT=y
 ```
