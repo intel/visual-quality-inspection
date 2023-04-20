@@ -14,6 +14,11 @@ from torchvision.models.feature_extraction import create_feature_extractor
 from torchvision.models import resnet18, resnet50
 from sklearn import metrics
 from sklearn.decomposition import PCA
+import intel_extension_for_pytorch as ipex
+
+import warnings
+warnings.filterwarnings("ignore")
+
 from sklearnex import patch_sklearn
 patch_sklearn()
 
@@ -37,10 +42,12 @@ def get_train_features(partial_model, dataset,feature_shape, config):
                                                 num_workers=config['num_workers'])
     len_dataset = len(dataloader.dataset)
     gt = torch.zeros(len_dataset)
-    with torch.no_grad():
+    with torch.cpu.amp.autocast(enabled=config['precision']=='bfloat16'):
         data_idx = 0
         for data in tqdm(dataloader):
             images = data['data']
+            if config['precision'] == 'bfloat16':
+                images = images.to(torch.bfloat16)
             labels = data['label']
             images, labels = images.to("cpu"), labels.to("cpu")
             num_samples = len(labels)
@@ -54,19 +61,20 @@ def get_train_features(partial_model, dataset,feature_shape, config):
         return data_mats_orig.numpy(), gt.numpy()
     
 def inference_score(partial_model, pca_kernel, dataset, feature_shape, model_config):
-    print("Evaluation on {} training images".format(len(dataset)))
+    print("Evaluation on {} test images".format(len(dataset)))
     model_config = config['model']
     dataset_config = config['dataset']
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=dataset_config['batch_size'], shuffle=False,
                                                 num_workers=config['num_workers'])
-    with torch.no_grad():
+    with torch.cpu.amp.autocast(enabled=config['precision']=='bfloat16'):
         len_dataset = len(dataset)
         gt = torch.zeros(len_dataset)
         scores = np.empty(len_dataset)
         count = 0
         for k, data in enumerate(tqdm(dataloader)):
             inputs = data['data'].contiguous(memory_format=torch.channels_last)
-
+            if config['precision'] == 'bfloat16':
+                inputs = inputs.to(torch.bfloat16)
             labels = data['label']
             num_im = inputs.shape[0]
 
@@ -117,14 +125,18 @@ def inference_workflow(model, pca_kernel, dataset,config):
 
     print("Evaluating on {} test images".format(data_length))
 
-    with torch.no_grad():
+    with torch.cpu.amp.autocast(enabled=config['precision']=='bfloat16'):
         gt = torch.zeros(data_length)
         scores = np.empty(data_length)
         count = 0
+        partial_model = ad.get_feature_extraction_model(model,config['model']['layer'])
+        model_ts = prepare_torchscript_model(partial_model, config)
         for k, (images, labels) in enumerate(tqdm(eval_loader)):
-            images = images.to(memory_format=torch.channels_last)
+            images = images.contiguous(memory_format=torch.channels_last)
+            if config['precision'] == 'bfloat16':
+                images = images.to(torch.bfloat16)
             num_im = images.shape[0]
-            outputs = ad.extract_features(model, images, config['model']['layer'],
+            outputs = ad.extract_features(model_ts, images, config['model']['layer'],
                                         pooling=['avg', config['model']['pool']])
             feature_shapes = outputs.shape
             oi = outputs
@@ -145,7 +157,6 @@ def train_workflow(dataset, config):
     model = ad.train(dataset, config)
     dataset._dataset.transform = dataset._train_transform
     print("Training on {} train images".format(len(dataset.train_subset)))
-    
     features,labels = ad.get_features(model,dataset._train_loader,config['model'])
     pca_kernel = get_PCA_kernel(features,config)
     
@@ -197,7 +208,7 @@ def load_custom_model(path, config):
             ckpt = torch.load(path,map_location=torch.device('cpu'))
             print("Loading the model from the following path: {}".format(path))
         else:
-            print("Model not found, please put model in {} directory", os.getcwd())
+            print("Model not found, please put model in {} output directory".format(os.getcwd()))
             sys.exit()
         
         model.load_state_dict(ckpt['state_dict'] , strict=False)
@@ -205,6 +216,27 @@ def load_custom_model(path, config):
         return model
     except Exception as error:
         print('Error while loading custom model: ' + repr(error))
+        
+def prepare_torchscript_model(model, config):
+    print("Preparing torchscript model in {}".format(config['precision']))
+    x = torch.randn(config['dataset']['batch_size'], 3, 
+                    config['dataset']['image_size'], config['dataset']['image_size']).contiguous(memory_format=torch.channels_last)
+    if config['precision']=='bfloat16':
+        model = ipex.optimize(model, dtype=torch.bfloat16, inplace=True)
+        x = x.to(torch.bfloat16)
+        with torch.cpu.amp.autocast(dtype=torch.bfloat16), torch.no_grad():
+            model = torch.jit.trace(model, x, strict=False).eval()
+        # print("running bfloat16 evaluation step\n")
+    elif config['precision']=='float32':
+        model = ipex.optimize(model, dtype=torch.float32, inplace=True)
+        with torch.no_grad():
+            model = torch.jit.trace(model, x, strict=False).eval()
+        # print("running float32 evaluation step\n")
+    else:
+        model = ipex.optimize(model, inplace=True)
+        
+    model = torch.jit.freeze(model)
+    return model
 def main(config):
     dataset_config = config['dataset']
     model_config = config['model']
@@ -229,11 +261,6 @@ def main(config):
         print("Accuracy {}% on test images".format(accuracy))
         return [dataset_config['category_type'],len(dataset.test_subset),auroc,accuracy]
     else:
-        # if config['dataset']['category_type'] == 'all':
-        #     path =  os.path.join(os.path.basename(config['output_path']), config['model']['feature_extractor']+'_'
-        #                          +config['model']['name']+'_'+config['dataset']['category_type']+'.pth.tar')
-        #     model = load_custom_model(path,config)
-        # else:
         model = load_custom_model(config['output_path'],config)
         trainset = Mvtec(dataset_config['root_dir'],object_type=dataset_config['category_type'],split='train',
                         im_size=dataset_config['image_size'])
@@ -241,10 +268,12 @@ def main(config):
                         defect_type='all',im_size=dataset_config['image_size'])
         partial_model, feature_shape =  get_partial_model(model,trainset, model_config)
         
-        train_features, train_gt = get_train_features(partial_model, trainset, feature_shape, config)
+        model_ts = prepare_torchscript_model(partial_model, config)
+        
+        train_features, train_gt = get_train_features(model_ts, trainset, feature_shape, config)
         pca_kernel = get_PCA_kernel(train_features,config)
         
-        scores, test_gt = inference_score(partial_model, pca_kernel, testset, feature_shape, model_config)
+        scores, test_gt = inference_score(model_ts, pca_kernel, testset, feature_shape, model_config)
 
         
         auroc, threshold = compute_auroc(test_gt,scores)

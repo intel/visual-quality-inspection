@@ -1,10 +1,11 @@
 num_workers: 32 # number of parallel threads to process the data
+precision: float32 # supported options are [float32, bfloat16]
 fine_tune : true
 output_path: ./output/  # path to save the checkpoints or final model
 tlt_wf_path: ./transfer-learning/workflows/vision_anomaly_detection
 dataset:
-  root_dir: ./data  # full path of root directory of MVTEC dataset
-  category_type: all # category type within MVTEC dataset, i.e. hazelnut or all (for running all categories in MVTEC)
+  root_dir: /data/datah/pratool/pretrained/datasets/mvtec/  # full path of root directory of MVTEC dataset
+  category_type: hazelnut # category type within MVTEC dataset, i.e. hazelnut or all (for running all categories in MVTEC)
   batch_size: 32 # inference batch size
   image_size: 224 # each image resized to this size (224x224)
 model: 
@@ -27,7 +28,7 @@ cutpaste:
   head_layer: 2 # number of perceptron layers appended towards the end of ResNet layers
   freeze_resnet: 20 # number of epochs till resnet layers will be frozen and only head layers will be trained
   batch_size: 64 # fine-tuning batch size
-  epochs: 2 # number of epochs to fine-tune the model
+  epochs: 1 # number of epochs to fine-tune the model
   optim: 'sgd' # optimizer
   model_path: './output' # path to save the checkpoints or final model
   ckpt: true # flag for whether intermediate checkpoints would be saved or not

@@ -4,6 +4,8 @@ Please set the following in the finetuning.yaml file:
 
 * **num_workers:** number of sub-processes or threads to use for data loading. Setting the argument num_workers as a positive integer will turn on multi-process data loading. (Default=32)
 
+* **precision:** precision of data type in which model to be fine-tuned. Choices are [float32, bfloat16]
+
 * **fine_tune:** set 'True' to run SimSiam or CutPaste self-supervised learning using Intel Transfer Learning Tool APIs. Set 'False' to run a pre-trained backbone by providing a model path under 'model_path' category
 
 * **output_path:** path to save the checkpoints or final model
