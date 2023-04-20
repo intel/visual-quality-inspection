@@ -106,28 +106,21 @@ More information can be in the paper [MVTec AD – A Comprehensive Real-World Da
 
 
 #### Download the data
-* Remove this line in final release *
-Download the MVTEC dataset from: https://www.mvtec.com/company/research/datasets/mvtec-ad/downloads
 
-```
-wget https://www.mydrive.ch/shares/38536/3830184030e49fe74747669442f0f282/download/420938113-1629952094/mvtec_anomaly_detection.tar.xz
-```
-
-Extract 'mvtec_anomaly_detection.tar.xz' using following commands:
-```
-mkdir -p mvtec
-tar -xf mvtec_anomaly_detection.tar.xz --directory data
-```
-
-OR
-
-Download the dataset using Model Zoo dataset download API
+Download the mvtec dataset using Intel Model Zoo dataset download API
 ```
 git clone https://github.com/intel-innersource/frameworks.ai.models.intel-models.git
-git checkout wafaa/datasetapi-mvtec-dataset
-python dataset.py -n mvtec-ad --download --preprocess -d /data/datad/ad_best_testing/mvtec_dataset
+cd frameworks.ai.models.intel-models/datasets/dataset_api/
+pip install -r requirements.txt
+python dataset.py -n mvtec-ad --download -d ../../../
 ```
 
+Extract the tar file
+```
+cd ../../../
+mkdir mvtec_dataset
+tar -xf mvtec_anomaly_detection.tar.xz --directory mvtec_dataset
+```
 
 
 
@@ -166,6 +159,7 @@ Build or Pull the provided docker image.
 
 ```bash
 git submodule update --init --recursive
+git clone https://github.com/IntelAI/models -b r2.11 intel-models
 cd docker
 docker compose build
 ```
@@ -179,6 +173,7 @@ docker pull intel/ai-workflows:beta-tlt-anomaly-detection
 Prepare dataset for Anomaly Detection workflows and accept the legal agreement to use the Intel Dataset Downloader.
 
 ```bash
+git clone https://github.com/IntelAI/models -b r2.11 intel-models
 cd docker
 docker compose run preprocess -e USER_CONSENT=y
 ```
