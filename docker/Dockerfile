@@ -1,5 +1,7 @@
 FROM amr-registry.caas.intel.com/aiops/transfer-learning:prod-r0.4
 
+RUN apt-get update -y && apt-get install -y --fix-missing --no-install-recommends wget
+
 COPY . /workspace
 
 WORKDIR /workspace
