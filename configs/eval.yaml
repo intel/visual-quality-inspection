@@ -2,7 +2,7 @@ num_workers: 32 # number of parallel threads to process the data
 precision: float32 # supported options are [float32, bfloat16]
 fine_tune : false
 output_path: ./output/  # path to save the checkpoints or final model
-tlt_wf_path: ./frameworks.ai.transfer-learning/workflows/vision_anomaly_detection
+tlt_wf_path: ./transfer-learning/workflows/vision_anomaly_detection
 dataset:
   root_dir: ./data # full path of root directory of MVTEC dataset
   category_type: hazelnut # category type within MVTEC dataset, i.e. hazelnut or all (for running all categories in MVTEC)
