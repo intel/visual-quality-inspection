@@ -1,13 +1,9 @@
 .git
 .github
-__pycache__
+**__pycache__**
 .vscode
 data
-dataset
 docker
 chart
 #intel-models
-models
-mvtec
 output
-venv
