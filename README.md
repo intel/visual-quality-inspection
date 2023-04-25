@@ -89,7 +89,6 @@ cd visual-quality-inspection
 ```
 * Remove this line in final release *
 git clone https://github.com/intel-innersource/frameworks.ai.transfer-learning.git
-git checkout pratool/anomaly_detection
 
 git clone https://github.com/IntelAI/transfer-learning.git
 
@@ -355,6 +354,7 @@ Select the parameters and configurations in the [finetuning.yaml](configs/README
 NOTE: 
 When using SimSiam self supervised training, download the Sim-Siam weights based on ResNet50 model and place under simsiam directory
 ```
+mkdir simsiam
 wget https://dl.fbaipublicfiles.com/simsiam/models/100ep-256bs/pretrain/checkpoint_0099.pth.tar -o ./simsiam/checkpoint_0099.pth.tar
 ```
 
