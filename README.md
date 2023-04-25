@@ -178,6 +178,7 @@ Prepare dataset for Anomaly Detection workflows and accept the legal agreement t
 
 ```bash
 git clone https://github.com/IntelAI/models -b r2.11 intel-models
+mkdir data && chmod 777 data
 cd docker
 docker compose run -e USER_CONSENT=y preprocess 
 ```
@@ -242,7 +243,7 @@ flowchart RL
   Vtransferlearning{{../transfer-learning}} x-.-x dev
   VCONFIGDIR{{"/${CONFIG_DIR"}} x-. "-$PWD/../configs}" .-x dev
   VDATASETDIR{{"/${DATASET_DIR"}} x-. "-$PWD/../data}" .-x dev
-  VOUTPUTDIR{{"/${OUTPUT_DIR"}} x-. "-$PWD/output}" .-x dev
+  VOUTPUTDIR{{"/${OUTPUT_DIR"}} x-. "-$PWD/../output}" .-x dev
 
   classDef volumes fill:#0f544e,stroke:#23968b
   class Vtransferlearning,VCONFIGDIR,VDATASETDIR,VOUTPUTDIR volumes
