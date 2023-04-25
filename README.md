@@ -111,7 +111,12 @@ Download the mvtec dataset using Intel Model Zoo dataset download API
 ```
 git clone https://github.com/intel-innersource/frameworks.ai.models.intel-models.git
 cd frameworks.ai.models.intel-models/datasets/dataset_api/
+```
+
+Install dependencies and download the dataset
+```
 pip install -r requirements.txt
+./setup.sh
 python dataset.py -n mvtec-ad --download -d ../../../
 ```
 
@@ -406,4 +411,4 @@ For more information or to read about other relevant workflow examples, see thes
 - [Intel® Transfer Learning Tool](https://github.com/IntelAI/models/tree/master/docs/notebooks/notebooks/e2e_workflows/Anomaly_Detection_MVTec.ipynb)
 
 ## Support
-If you have any questions with this workflow, want help with troubleshooting, want to report a bug or submit enhancement requests, please submit a GitHub issue
+If you have any questions with this workflow, want help with troubleshooting, want to report a bug or submit enhancement requests, please submit a GitHub issue.
