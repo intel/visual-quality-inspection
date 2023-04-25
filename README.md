@@ -175,7 +175,7 @@ Prepare dataset for Anomaly Detection workflows and accept the legal agreement t
 ```bash
 git clone https://github.com/IntelAI/models -b r2.11 intel-models
 cd docker
-docker compose run preprocess -e USER_CONSENT=y
+docker compose run -e USER_CONSENT=y preprocess 
 ```
 
 | Environment Variable Name | Default Value | Description |
