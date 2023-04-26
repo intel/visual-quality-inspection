@@ -66,15 +66,15 @@ services:
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
       - no_proxy=${no_proxy}
-      - PYTHONPATH=/workspace/transfer-learning
+      - PYTHONPATH=/workspace
     image: intel/ai-workflows:${TAG:-beta-anomaly-detection}
     privileged: true
     shm_size: 8GB
     stdin_open: true
     tty: true
     volumes: 
-      - ../frameworks.ai.transfer-learning:/workspace/transfer-learning
+      - ../transfer-learning:/workspace/transfer-learning
       - /${CONFIG_DIR:-$PWD/../configs}:/workspace/configs
       - /${DATASET_DIR:-$PWD/../data}:/workspace/data
-      - /${OUTPUT_DIR:-$PWD/output}:/workspace/output
+      - /${OUTPUT_DIR:-$PWD/../output}:/workspace/output
     working_dir: /workspace
