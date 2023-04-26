@@ -155,7 +155,7 @@ chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
 docker compose version
 ```
 
-### 2. Install Vision Packages and Intel TensorFlow Toolkit
+### 2. Install Workflow Packages and Intel Transfer Learning Toolkit
 Ensure you have completed steps in the [Get Started Section](#get-started).
 
 ### 3. Set Up Docker Image
