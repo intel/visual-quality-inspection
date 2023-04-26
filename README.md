@@ -43,14 +43,14 @@ There are workflow-specific hardware and software setup requirements depending o
 Linux OS (Ubuntu 20.04) is used in this reference solution. Make sure the following dependencies are installed.
 
 1. `sudo apt update`
-1. python 3.9, pip/conda OR python3.9-venv
+1. pip/conda OR python3.9-venv
 1. git
 
 ## How It Works?
 
 This reference use case uses a deep learning based approach, named deep-feature modeling (DFM) and falls within the broader area of out-of-distribution (OOD) detection i.e. when a model sees an input that differs from its training data, it is marked as an anomaly. 
 
-The use case provides 3 options for network modelling of the vision subtask:
+The use case provides 3 options for modelling of the vision subtask:
 * **Pre-trained backbone:** uses a deep network (ResNet-50v1.5 in this case) that has been pretrained on large visual datasets such as ImageNet
 * **SimSiam self-supervised learning:** is a contrastive learning method based on Siamese networks. It learns meaningful representation of dataset without using any labels. SimSiam requires a dataloader such that it can produce two different augmented images from one underlying image. The end goal is to train the network to produce same features for both images. It takes a ResNet model as the backbone and fine-tunes the model on the augmented dataset to get closer feature embeddings for the use case. Read more [here](https://arxiv.org/pdf/2011.10566.pdf)
 * **Cut-Paste self-supervised learning:** is a contrastive learning method similar to SimSiam but differs in the augmentations used during training. It take a ResNet model as backbone and fine-tunes the model after applying a data augmentation strategy that cuts an image patch and pastes at a random location of a large image. This allows us to construct a high performance model for defect detection without presence of anomalous data. Read more [here](https://arxiv.org/pdf/2104.04015.pdf)
