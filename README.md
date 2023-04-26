@@ -48,7 +48,7 @@ Linux OS (Ubuntu 20.04) is used in this reference solution. Make sure the follow
 
 ## How It Works?
 
-This reference use case uses a deep learning based approach, named deep-feature modeling (DFM) and falls within the broader area of out-of-distribution (OOD) detection i.e. when a model sees an input that differs from its training data, it is marked as an anomaly. 
+This reference use case uses a deep learning based approach, named deep-feature modeling (DFM) and falls within the broader area of out-of-distribution (OOD) detection i.e. when a model sees an input that differs from its training data, it is marked as an anomaly. Learn more about the approach [here](https://arxiv.org/pdf/1909.11786.pdf) 
 
 The use case provides 3 options for modelling of the vision subtask:
 * **Pre-trained backbone:** uses a deep network (ResNet-50v1.5 in this case) that has been pretrained on large visual datasets such as ImageNet
