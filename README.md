@@ -90,7 +90,8 @@ cd visual-quality-inspection
 * Remove this line in final release *
 git clone https://github.com/intel-innersource/frameworks.ai.transfer-learning.git
 
-git clone https://github.com/IntelAI/transfer-learning.git
+
+git submodule update --init --recursive
 
 ```
 
@@ -106,10 +107,16 @@ More information can be in the paper [MVTec AD – A Comprehensive Real-World Da
 
 #### Download the data
 
+This section is only applicable for bare metal. Docker Compose handles the downloading and preprocessing of the data inside a container.
+
 Download the mvtec dataset using Intel Model Zoo dataset download API
 ```
+* Remove this line in final release *
 git clone https://github.com/intel-innersource/frameworks.ai.models.intel-models.git
 cd frameworks.ai.models.intel-models/datasets/dataset_api/
+
+git clone https://github.com/IntelAI/models -b r2.11 intel-models
+cd intel-models/datasets/dataset_api/
 ```
 
 Install dependencies and download the dataset
@@ -135,7 +142,7 @@ This reference kit offers three options for running the fine-tuning and inferenc
 - Argo Workflows on K8s Using Helm
 - Bare Metal
 
-Details about each of these methods can be found below.
+Details about each of these methods can be found below. Keep in mind that each method must be executed in a separate environment from each other. If you run first Docker Compose and then bare metal, this will cause issues.
 
 ## Run Using Docker
 Follow these instructions to set up and run our provided Docker image. For running on bare metal, see the [bare metal](#run-using-bare-metal) instructions.
@@ -162,10 +169,10 @@ Ensure you have completed steps in the [Get Started Section](#get-started).
 Build or Pull the provided docker image.
 
 ```bash
-git submodule update --init --recursive
 git clone https://github.com/IntelAI/models -b r2.11 intel-models
 cd docker
 docker compose build
+cd ..
 ```
 OR
 ```bash
@@ -177,7 +184,6 @@ docker pull intel/ai-workflows:beta-tlt-anomaly-detection
 Prepare dataset for Anomaly Detection workflows and accept the legal agreement to use the Intel Dataset Downloader.
 
 ```bash
-git clone https://github.com/IntelAI/models -b r2.11 intel-models
 mkdir data && chmod 777 data
 cd docker
 docker compose run -e USER_CONSENT=y preprocess 
@@ -211,7 +217,6 @@ flowchart RL
 Run entire pipeline to view the logs of different running containers.
 
 ```bash
-cd docker
 docker compose run stock-evaluation &
 ```
 
@@ -252,7 +257,6 @@ flowchart RL
 Run using Docker Compose.
 
 ```bash
-cd docker
 docker compose run dev
 ```
 
@@ -350,10 +354,10 @@ pip install -r requirements.txt
 
 ### 2. Select parameters and configurations
 
-Select the parameters and configurations in the [finetuning.yaml](configs/README.md) file
+Select the parameters and configurations in the [finetuning.yaml](configs/README.md) file.
 
 NOTE: 
-When using SimSiam self supervised training, download the Sim-Siam weights based on ResNet50 model and place under simsiam directory
+When using SimSiam self supervised training, download the Sim-Siam weights based on ResNet50 model and place under simsiam directory:
 ```
 mkdir simsiam
 wget https://dl.fbaipublicfiles.com/simsiam/models/100ep-256bs/pretrain/checkpoint_0099.pth.tar -o ./simsiam/checkpoint_0099.pth.tar
@@ -363,16 +367,16 @@ wget https://dl.fbaipublicfiles.com/simsiam/models/100ep-256bs/pretrain/checkpoi
 
 Using Transfer Learning Tool based fine-tuning:
 
-In finetuning.yaml, change 'fine_tune' flag to true and set the simsiam/cutpaste settings accordingly
-Change other settings in config.yaml to run different configurations
+In finetuning.yaml, change 'fine_tune' flag to true, if you downloaded the data from [DataSet](#DataSet) change ./data/ to ./mvtec_dataset/ and set the simsiam/cutpaste settings accordingly.
+Change other settings in config.yaml to run different configurations.
 ```
 python anomaly_detection.py --config_file ./configs/finetuning.yaml
 ```
 
 Using a pre-trained customized model:
 
-In finetuning.yaml, change 'fine_tune' flag to false and provide a custom model path under 'saved_model_path'
-Change other settings in config.yaml to run different configurations
+In finetuning.yaml, change 'fine_tune' flag to false and provide a custom model path under 'saved_model_path'.
+Change other settings in config.yaml to run different configurations.
 ```
 python anomaly_detection.py --config_file ./configs/finetuning.yaml
 ```
