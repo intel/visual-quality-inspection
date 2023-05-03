@@ -13,9 +13,9 @@ The goal of anomaly detection is to identify rare, abnormal events such as defec
     - [Download the Transfer Learning Tool](#Download-the-Transfer-Learning-Tool)
     - [DataSet](#DataSet)
 - [Ways to run this reference use case](#Ways-to-run-this-reference-use-case)
-- [Run Using Docker](#run-using-docker)
-- [Run Using Argo Workflows on K8s using Helm](#run-using-argo-workflows-on-k8s-using-helm)
-- [Run Using Bare Metal](#run-using-bare-metal) 
+    - [Run Using Docker](#run-using-docker)
+    - [Run Using Argo Workflows on K8s using Helm](#run-using-argo-workflows-on-k8s-using-helm)
+    - [Run Using Bare Metal](#run-using-bare-metal) 
 - [Expected Output](#expected-output)
 - [Summary and Next Steps](#summary-and-next-steps)
 - [Learn More](#learn-more)
@@ -102,32 +102,6 @@ More information can be in the paper [MVTec AD – A Comprehensive Real-World Da
 ![Statistical_overview_of_the_MVTec_AD_dataset](assets/mvtec_dataset_characteristics.JPG)
 
 *Table 1:  Statistical overview of the MVTec AD dataset. For each category, the number of training and test images is given together with additional information about the defects present in the respective test images.[Source](https://www.mvtec.com/fileadmin/Redaktion/mvtec.com/company/research/datasets/mvtec_ad.pdf)*
-
-
-#### Download the data
-
-This section is only applicable for bare metal. Docker Compose handles the downloading and preprocessing of the data inside a container.
-
-Download the mvtec dataset using Intel Model Zoo dataset download API
-```
-git clone https://github.com/IntelAI/models.githttps://github.com/IntelAI/models.git
-cd models/datasets/dataset_api/
-```
-
-Install dependencies and download the dataset
-```
-pip install -r requirements.txt
-./setup.sh
-python dataset.py -n mvtec-ad --download -d ../../../
-```
-
-Extract the tar file
-```
-cd ../../../
-mkdir mvtec_dataset
-tar -xf mvtec_anomaly_detection.tar.xz --directory mvtec_dataset
-```
-
 
 
 ## Ways to run this reference use case
@@ -347,7 +321,32 @@ source anomaly_det_refkit/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Select parameters and configurations
+### 2. Download the dataset
+
+This section is only applicable for bare metal. Docker Compose handles the downloading and preprocessing of the data inside a container.
+
+Download the mvtec dataset using Intel Model Zoo dataset download API
+```
+git clone https://github.com/IntelAI/models.githttps://github.com/IntelAI/models.git
+cd models/datasets/dataset_api/
+```
+
+Install dependencies and download the dataset
+```
+pip install -r requirements.txt
+./setup.sh
+python dataset.py -n mvtec-ad --download -d ../../../
+```
+
+Extract the tar file
+```
+cd ../../../
+mkdir mvtec_dataset
+tar -xf mvtec_anomaly_detection.tar.xz --directory mvtec_dataset
+```
+
+
+### 3. Select parameters and configurations
 
 Select the parameters and configurations in the [finetuning.yaml](configs/README.md) file.
 
@@ -358,7 +357,7 @@ mkdir simsiam
 wget https://dl.fbaipublicfiles.com/simsiam/models/100ep-256bs/pretrain/checkpoint_0099.pth.tar -o ./simsiam/checkpoint_0099.pth.tar
 ```
 
-### 3. Running the end-to-end use case 
+### 4. Running the end-to-end use case 
 
 Using Transfer Learning Tool based fine-tuning:
 
