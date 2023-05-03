@@ -35,7 +35,6 @@ To overcome these challenges and achieve state-of-the-art performance, we presen
 More information can be in the paper [MVTec AD – A Comprehensive Real-World Dataset for Unsupervised Anomaly Detection](https://www.mvtec.com/fileadmin/Redaktion/mvtec.com/company/research/datasets/mvtec_ad.pdf)
 
 ![Statistical_overview_of_the_MVTec_AD_dataset](assets/mvtec_dataset_characteristics.JPG)
-
 *Table 1:  Statistical overview of the MVTec AD dataset. For each category, the number of training and test images is given together with additional information about the defects present in the respective test images.[Source](https://www.mvtec.com/fileadmin/Redaktion/mvtec.com/company/research/datasets/mvtec_ad.pdf)*
 
 
@@ -97,9 +96,7 @@ cd visual-quality-inspection
 ### Download the Transfer Learning Tool (TLT)
 ```
 git clone https://github.com/IntelAI/transfer-learning.git
-
 git submodule update --init --recursive
-
 ```
 
 ## Ways to run this reference use case
@@ -321,8 +318,6 @@ pip install -r requirements.txt
 
 ### 2. Download the dataset
 
-This section is only applicable for bare metal. Docker Compose handles the downloading and preprocessing of the data inside a container.
-
 Download the mvtec dataset using Intel Model Zoo dataset download API
 ```
 git clone https://github.com/IntelAI/models.githttps://github.com/IntelAI/models.git
@@ -359,8 +354,8 @@ wget https://dl.fbaipublicfiles.com/simsiam/models/100ep-256bs/pretrain/checkpoi
 
 Using Transfer Learning Tool based fine-tuning:
 
-In finetuning.yaml, change 'fine_tune' flag to true, if you downloaded the data from [DataSet](#DataSet) change ./data/ to ./mvtec_dataset/ and set the simsiam/cutpaste settings accordingly.
-Change other settings in finetuning.yaml to run different configurations.
+In finetuning.yaml, set 'fine_tune' flag to true. If you downloaded the data from [DataSet](#DataSet) change ./data/ to ./mvtec_dataset/ and set the pretrained/simsiam/cutpaste settings accordingly.
+Change other settings as intended in finetuning.yaml to run different configurations.
 ```
 python anomaly_detection.py --config_file ./configs/finetuning.yaml
 ```
