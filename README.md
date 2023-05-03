@@ -35,8 +35,8 @@ There are workflow-specific hardware and software setup requirements depending o
 
 | Recommended Hardware         | Precision  |
 | ---------------------------- | ---------- |
-| Intel® 4th Gen Xeon® Scalable Performance processors| FP32, BF16 |
-| Intel® 1st, 2nd, 3rd, and 4th Gen Xeon® Scalable Performance processors| FP32 |
+| Intel® 4th Gen Xeon® Scalable Performance processors| float32, Bfloat16 |
+| Intel® 1st, 2nd, 3rd Gen Xeon® Scalable Performance processors| float32 |
 
 
 ## Software Requirements 
@@ -89,7 +89,6 @@ cd visual-quality-inspection
 ```
 git clone https://github.com/IntelAI/transfer-learning.git
 
-
 git submodule update --init --recursive
 
 ```
@@ -107,9 +106,9 @@ More information can be in the paper [MVTec AD – A Comprehensive Real-World Da
 ## Ways to run this reference use case
 This reference kit offers three options for running the fine-tuning and inference processes:
 
-- Docker
-- Argo Workflows on K8s Using Helm
-- Bare Metal
+- [Docker](#run-using-docker)
+- [Argo Workflows on K8s Using Helm](#run-using-argo-workflows-on-k8s-using-helm)
+- [Bare Metal](#run-using-bare-metal)
 
 Details about each of these methods can be found below. Keep in mind that each method must be executed in a separate environment from each other. If you run first Docker Compose and then bare metal, this will cause issues.
 
@@ -362,7 +361,7 @@ wget https://dl.fbaipublicfiles.com/simsiam/models/100ep-256bs/pretrain/checkpoi
 Using Transfer Learning Tool based fine-tuning:
 
 In finetuning.yaml, change 'fine_tune' flag to true, if you downloaded the data from [DataSet](#DataSet) change ./data/ to ./mvtec_dataset/ and set the simsiam/cutpaste settings accordingly.
-Change other settings in config.yaml to run different configurations.
+Change other settings in finetuning.yaml to run different configurations.
 ```
 python anomaly_detection.py --config_file ./configs/finetuning.yaml
 ```
