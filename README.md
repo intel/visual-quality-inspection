@@ -18,6 +18,9 @@ The goal of anomaly detection is to identify rare, abnormal events such as defec
     - [Run Using Bare Metal](#run-using-bare-metal) 
 - [Expected Output](#expected-output)
 - [Summary and Next Steps](#summary-and-next-steps)
+    - [How to customize this use case](#how-to-customize-this-use-case)
+    - [Adopt to your dataset](#adopt-to-your-dataset)
+    - [Adopt to your model](#adopt-to-your-model)
 - [Learn More](#learn-more)
 - [Support](#support)
 
