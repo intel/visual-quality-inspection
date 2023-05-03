@@ -87,8 +87,7 @@ cd visual-quality-inspection
 
 ### Download the Transfer Learning Tool (TLT)
 ```
-* Remove this line in final release *
-git clone https://github.com/intel-innersource/frameworks.ai.transfer-learning.git
+git clone https://github.com/IntelAI/transfer-learning.git
 
 
 git submodule update --init --recursive
@@ -111,12 +110,8 @@ This section is only applicable for bare metal. Docker Compose handles the downl
 
 Download the mvtec dataset using Intel Model Zoo dataset download API
 ```
-* Remove this line in final release *
-git clone https://github.com/intel-innersource/frameworks.ai.models.intel-models.git
-cd frameworks.ai.models.intel-models/datasets/dataset_api/
-
-git clone https://github.com/IntelAI/models -b r2.11 intel-models
-cd intel-models/datasets/dataset_api/
+git clone https://github.com/IntelAI/models.githttps://github.com/IntelAI/models.git
+cd models/datasets/dataset_api/
 ```
 
 Install dependencies and download the dataset
