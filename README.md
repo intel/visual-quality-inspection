@@ -4,14 +4,14 @@ The goal of anomaly detection is to identify rare, abnormal events such as defec
 
 
 ## **Table of Contents**
-- [Overview](#overview)
-- [Hardware Requirements](#hardware-requirements)
+- [Technical Overview](#technical-overview)
+    - [DataSet](#DataSet)
+- [Validated Hardware Details](#validated-hardware-details)
 - [Software Requirements](#software-requirements)
 - [How it Works?](#how-it-works)
 - [Get Started](#get-started)
     - [Download the Workflow Repository](#Download-the-Workflow-Repository)
     - [Download the Transfer Learning Tool](#Download-the-Transfer-Learning-Tool)
-    - [DataSet](#DataSet)
 - [Ways to run this reference use case](#Ways-to-run-this-reference-use-case)
     - [Run Using Docker](#run-using-docker)
     - [Run Using Argo Workflows on K8s using Helm](#run-using-argo-workflows-on-k8s-using-helm)
@@ -21,7 +21,7 @@ The goal of anomaly detection is to identify rare, abnormal events such as defec
 - [Learn More](#learn-more)
 - [Support](#support)
 
-## Overview
+## Technical Overview
 Classic and modern anomaly detection techniques have certain challenges: 
 - Feature engineering needs to be performed to extract representations from the raw data. Traditional ML techniques rely on hand-crafted features that may not always generalize well to other settings. 
 - Classification techniques require labeled training data, which is challenging because anomalies are typically rare occurrences and obtaining it increases the data collection & annotation effort. 
@@ -29,13 +29,22 @@ Classic and modern anomaly detection techniques have certain challenges:
 
 To overcome these challenges and achieve state-of-the-art performance, we present an unsupervised, mixed method end-to-end fine-tuning & inference reference solution for anomaly detection where a model of normality is learned from defect-free data in an unsupervised manner, and deviations from the models are flagged as anomalies. This reference use case is accelerated by Intel optimized software and is built upon easy-to-use Intel Transfer Learning Tool APIs.
 
+### DataSet
+[MVTec AD](https://www.mvtec.com/company/research/datasets/mvtec-ad) is a dataset for benchmarking anomaly detection methods focused on visual quality inspection in the industrial domain. It contains over 5000 high-resolution images divided into ten unique objects and five unique texture categories. Each category comprises a set of defect-free training images and a test set of images with various kinds of defects as well as defect-free images. There are 73 different types of anomalies in the form of defects or structural deviations present in these objects and textures.
 
-## Hardware Requirements
+More information can be in the paper [MVTec AD – A Comprehensive Real-World Dataset for Unsupervised Anomaly Detection](https://www.mvtec.com/fileadmin/Redaktion/mvtec.com/company/research/datasets/mvtec_ad.pdf)
+
+![Statistical_overview_of_the_MVTec_AD_dataset](assets/mvtec_dataset_characteristics.JPG)
+
+*Table 1:  Statistical overview of the MVTec AD dataset. For each category, the number of training and test images is given together with additional information about the defects present in the respective test images.[Source](https://www.mvtec.com/fileadmin/Redaktion/mvtec.com/company/research/datasets/mvtec_ad.pdf)*
+
+
+## Validated Hardware Details
 There are workflow-specific hardware and software setup requirements depending on how the workflow is run. Bare metal development system and Docker image running locally have the same system requirements. 
 
 | Recommended Hardware         | Precision  |
 | ---------------------------- | ---------- |
-| Intel® 4th Gen Xeon® Scalable Performance processors| float32, Bfloat16 |
+| Intel® 4th Gen Xeon® Scalable Performance processors| float32, bfloat16 |
 | Intel® 1st, 2nd, 3rd Gen Xeon® Scalable Performance processors| float32 |
 
 
@@ -92,16 +101,6 @@ git clone https://github.com/IntelAI/transfer-learning.git
 git submodule update --init --recursive
 
 ```
-
-### DataSet
-[MVTec AD](https://www.mvtec.com/company/research/datasets/mvtec-ad) is a dataset for benchmarking anomaly detection methods focused on visual quality inspection in the industrial domain. It contains over 5000 high-resolution images divided into ten unique objects and five unique texture categories. Each category comprises a set of defect-free training images and a test set of images with various kinds of defects as well as defect-free images. There are 73 different types of anomalies in the form of defects or structural deviations present in these objects and textures.
-
-More information can be in the paper [MVTec AD – A Comprehensive Real-World Dataset for Unsupervised Anomaly Detection](https://www.mvtec.com/fileadmin/Redaktion/mvtec.com/company/research/datasets/mvtec_ad.pdf)
-
-![Statistical_overview_of_the_MVTec_AD_dataset](assets/mvtec_dataset_characteristics.JPG)
-
-*Table 1:  Statistical overview of the MVTec AD dataset. For each category, the number of training and test images is given together with additional information about the defects present in the respective test images.[Source](https://www.mvtec.com/fileadmin/Redaktion/mvtec.com/company/research/datasets/mvtec_ad.pdf)*
-
 
 ## Ways to run this reference use case
 This reference kit offers three options for running the fine-tuning and inference processes:
@@ -366,14 +365,6 @@ Change other settings in finetuning.yaml to run different configurations.
 python anomaly_detection.py --config_file ./configs/finetuning.yaml
 ```
 
-Using a pre-trained customized model:
-
-In finetuning.yaml, change 'fine_tune' flag to false and provide a custom model path under 'saved_model_path'.
-Change other settings in config.yaml to run different configurations.
-```
-python anomaly_detection.py --config_file ./configs/finetuning.yaml
-```
-
 ## Expected Output
 
 ```
@@ -399,6 +390,32 @@ python anomaly_detection.py --config_file ./configs/finetuning.yaml
 ```
 
 ## Summary and Next Steps
+
+### How to customize this use case
+(ADD: Explain what customizations they could do for this workflow/use case.)
+
+### Adopt to your dataset
+(ADD: Describe with a completely different example.)
+
+### Adopt to your model
+
+#### 1. Change to a different pre-trained model from Torchvision:
+Change the 'model/name' variable in configs/finetuning.yaml to the intended model e.g.: resnet18
+
+For simsiam, download the Sim-Siam weights based on the new model and place it under the simsiam directory. If no pre-trained simsiam weights are available, fine-tuning will take time and have to be run for more epochs
+Change other settings as intended in config.yaml to run different configurations. Then run the application using:
+```
+python anomaly_detection.py --config_file ./configs/finetuning.yaml
+```
+
+
+#### 2. Plug-in your own pre-trained customized model:
+
+In finetuning.yaml, change 'fine_tune' flag to false and provide a custom model path under 'saved_model_path'.
+Change other settings as intended in config.yaml to run different configurations. Then run the application using:
+```
+python anomaly_detection.py --config_file ./configs/finetuning.yaml
+```
 
 
 ## Learn More
