@@ -1,6 +1,9 @@
 # Anomaly Detection: Visual Quality Inspection in the Industrial Domain
 
-The goal of anomaly detection is to identify rare, abnormal events such as defects in a part being manufactured on an industrial production line. 
+Manual anomaly detection is time and labor-intensive which limits its applicability on large volumes of data that are typical in industrial settings. Application of artificial intelligence and machine learning is transforming Industrial Internet of Things (IIoT) segments by enabling higher productivity, better insights, less downtime, and superior product quality. 
+
+The goal of this anomaly detection reference use case is to provide AI-powered visual quality inspection by identifing rare, abnormal events such as defects in a part being manufactured on an industrial production line. Use this reference solution as-is on your dataset, curate it to your needs by fine-tuning the models and changing configurations to get improved performance, modify it to meet your productivity and performance goals by making use of the modular architecture and realize superior performance using the Intel optimized software packages and libraries for Intel hardware that are built into the solution.
+
 
 
 ## **Table of Contents**
@@ -397,7 +400,35 @@ python anomaly_detection.py --config_file ./configs/finetuning.yaml
 (ADD: Explain what customizations they could do for this workflow/use case.)
 
 ### Adopt to your dataset
-(ADD: Describe with a completely different example.)
+This reference use case can be easily deployed on a different or customized dataset by simply arranging the images for training and testing in the following format (Note that this approach only uses good images for training):
+
+```mermaid
+graph TD;
+    dataset-->train;
+    dataset-->test;
+    train-->good;
+    test-->crack;
+    test-->good;
+    test-->joint;
+    test-->dot;
+    test-->other_anomalies;
+```
+
+dataset
+|
+ --train
+|    |
+|     --good
+|
+ --test
+     |
+     |--crack
+     |--good
+     |--dot  
+     |--joint
+      --etc.
+ 
+For example, to run it for a [Marble Surface Anomaly Detection dataset](https://www.kaggle.com/datasets/wardaddy24/marble-surface-anomaly-detection-2) in Kaggle, download the dataset and update the train folder to only include the good folder. Move the sub-folders with anomaly images in train folder to either the corresponding test folders or delete them.
 
 ### Adopt to your model
 
@@ -422,10 +453,11 @@ python anomaly_detection.py --config_file ./configs/finetuning.yaml
 
 ## Learn More
 For more information or to read about other relevant workflow examples, see these guides and software resources:
+- [Intel® Transfer Learning Tool](https://github.com/IntelAI/transfer-learning)
 - [Intel® AI Analytics Toolkit (AI Kit)](https://www.intel.com/content/www/us/en/developer/tools/oneapi/ai-analytics-toolkit.html)
-- [Intel® Neural Compressor](https://github.com/intel/neural-compressor)
 - [Intel® Extension for PyTorch](https://intel.github.io/intel-extension-for-pytorch/)
-- [Intel® Transfer Learning Tool](https://github.com/IntelAI/models/tree/master/docs/notebooks/notebooks/e2e_workflows/Anomaly_Detection_MVTec.ipynb)
+- [Intel® Extension for Scikit-learn](https://www.intel.com/content/www/us/en/developer/tools/oneapi/scikit-learn.html#gs.x609e4)
+- [Intel® Neural Compressor](https://github.com/intel/neural-compressor)
 
 ## Support
 If you have any questions with this workflow, want help with troubleshooting, want to report a bug or submit enhancement requests, please submit a GitHub issue.
