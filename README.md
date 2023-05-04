@@ -324,7 +324,7 @@ pip install -r requirements.txt
 
 Download the mvtec dataset using Intel Model Zoo dataset download API
 ```
-git clone https://github.com/IntelAI/models.githttps://github.com/IntelAI/models.git
+git clone https://github.com/IntelAI/models.git
 cd models/datasets/dataset_api/
 ```
 
@@ -370,23 +370,26 @@ python anomaly_detection.py --config_file ./configs/finetuning.yaml
 +------------+------------------------+-------+--------------+
 |  Category  | Test set (Image count) | AUROC | Accuracy (%) |
 +------------+------------------------+-------+--------------+
-|   BOTTLE   |           83           | 100.0 |    100.0     |
-|   CABLE    |          150           | 96.08 |    87.33     |
-|  CAPSULE   |          132           | 92.62 |    96.21     |
-|   CARPET   |          117           | 87.72 |    79.49     |
-|    GRID    |           78           | 90.98 |    87.18     |
-|  HAZELNUT  |          110           | 99.57 |    96.36     |
-|  LEATHER   |          124           |  99.8 |    98.39     |
-| METAL_NUT  |          115           | 92.38 |    86.96     |
-|    PILL    |          167           | 96.92 |    91.02     |
-|   SCREW    |          160           | 83.97 |    78.75     |
-|    TILE    |          117           | 97.69 |    97.44     |
-| TOOTHBRUSH |           42           | 97.78 |    95.24     |
-| TRANSISTOR |          100           | 96.46 |     90.0     |
-|    WOOD    |           79           | 97.72 |    93.67     |
-|   ZIPPER   |          151           | 98.19 |    88.74     |
+|   BOTTLE   |           83           | 99.92 |     98.8     |
+|   CABLE    |          150           | 94.36 |    88.67     |
+|  CAPSULE   |          132           | 95.33 |    87.12     |
+|   CARPET   |          117           | 91.65 |    83.76     |
+|    GRID    |           78           |  86.3 |    82.05     |
+|  HAZELNUT  |          110           | 99.25 |    97.27     |
+|  LEATHER   |          124           |  99.9 |    98.39     |
+| METAL_NUT  |          115           |  93.3 |    90.43     |
+|    PILL    |          167           | 96.02 |    86.83     |
+|   SCREW    |          160           |  83.3 |    81.88     |
+|    TILE    |          117           | 98.81 |    99.15     |
+| TOOTHBRUSH |           42           | 96.11 |     88.1     |
+| TRANSISTOR |          100           | 96.42 |     91.0     |
+|    WOOD    |           79           |  99.3 |    97.47     |
+|   ZIPPER   |          151           | 97.16 |    90.07     |
 +------------+------------------------+-------+--------------+
 ```
+*Above results are on single node Dual socket 4th Generation Intel Xeon Scalable 8480+ (codenamed: Sapphire Rapids) Processor. 56 cores per socket, Intel® Turbo Boost Technology enabled, Intel® Hyper-Threading Technology enabled, 1024 GB memory (16x64GB), Configured Memory speed=4800 MT/s, INTEL SSDSC2BA012T4, CentOS Linux 8, BIOS=EGSDCRB.86B.WD.64.2022.29.7.13.1329, CPU Governor=performance, intel-extension-for-pytorch v2.0.0, torch 2.0.0, scikit-learn-intelex v2023.1.1, pandas 2.0.1. Configuration: precision=bfloat16, batch size=32, features extracted from pretrained resnet50v1.50 model.*
+
+
 
 ## Summary and Next Steps
 
@@ -401,7 +404,7 @@ python anomaly_detection.py --config_file ./configs/finetuning.yaml
 #### 1. Change to a different pre-trained model from Torchvision:
 Change the 'model/name' variable in configs/finetuning.yaml to the intended model e.g.: resnet18
 
-For simsiam, download the Sim-Siam weights based on the new model and place it under the simsiam directory. If no pre-trained simsiam weights are available, fine-tuning will take time and have to be run for more epochs
+For simsiam, download the Sim-Siam weights based on the new model and place it under the simsiam directory. If no pre-trained simsiam weights are available, fine-tuning will take time and have to be run for more epochs. 
 Change other settings as intended in config.yaml to run different configurations. Then run the application using:
 ```
 python anomaly_detection.py --config_file ./configs/finetuning.yaml
