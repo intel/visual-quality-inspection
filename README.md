@@ -396,8 +396,10 @@ python anomaly_detection.py --config_file ./configs/finetuning.yaml
 
 ## Summary and Next Steps
 
-### How to customize this use case
-(ADD: Explain what customizations they could do for this workflow/use case.)
+The reference use case above demonstrates an Anomaly Detection approach using deep feature extraction and out-of-distrabution detection. It uses a tunable, modular workflow for fine-tuning the model & extractingits features, both of which uses the Intel® Transfer Learning Tool underneath. For optimal performance on Intel architecture, the scripts are also enabled with Intel extension for PyTorch, Intel extension for scikit-learn and has an option to run bfloat16 on 4th Gen Intel Xeon scalable processors using Intel® Advanced Matrix Extensions (Intel® AMX).
+
+Tunable configurations and parameters are exposed using yaml config files allowing users to change model training hyperparameters, datatypes, paths, and dataset settings without having to modify or search through the code.
+
 
 ### Adopt to your dataset
 This reference use case can be easily deployed on a different or customized dataset by simply arranging the images for training and testing in the following folder structure (Note that this approach only uses good images for training):
@@ -440,6 +442,7 @@ python anomaly_detection.py --config_file ./configs/finetuning.yaml
 ## Learn More
 For more information or to read about other relevant workflow examples, see these guides and software resources:
 - [Intel® Transfer Learning Tool](https://github.com/IntelAI/transfer-learning)
+- [Anomaly Detection fine-tuning workflow using SimSiam and CutPaste techniques](https://github.com/IntelAI/transfer-learning/tree/main/workflows/vision_anomaly_detection)
 - [Intel® AI Analytics Toolkit (AI Kit)](https://www.intel.com/content/www/us/en/developer/tools/oneapi/ai-analytics-toolkit.html)
 - [Intel® Extension for PyTorch](https://intel.github.io/intel-extension-for-pytorch/)
 - [Intel® Extension for Scikit-learn](https://www.intel.com/content/www/us/en/developer/tools/oneapi/scikit-learn.html#gs.x609e4)
