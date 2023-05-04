@@ -100,6 +100,7 @@ cd visual-quality-inspection
 ```
 git clone https://github.com/IntelAI/transfer-learning.git
 git submodule update --init --recursive
+export PYTHONPATH=./transfer-learning/
 ```
 
 ## Ways to run this reference use case
