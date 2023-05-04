@@ -400,13 +400,13 @@ python anomaly_detection.py --config_file ./configs/finetuning.yaml
 (ADD: Explain what customizations they could do for this workflow/use case.)
 
 ### Adopt to your dataset
-This reference use case can be easily deployed on a different or customized dataset by simply arranging the images for training and testing in the following format (Note that this approach only uses good images for training):
+This reference use case can be easily deployed on a different or customized dataset by simply arranging the images for training and testing in the following folder structure (Note that this approach only uses good images for training):
 
 ```mermaid
 graph TD;
     dataset-->train;
     dataset-->test;
-    train-->good;
+    train-->Good;
     test-->crack;
     test-->good;
     test-->joint;
@@ -414,21 +414,7 @@ graph TD;
     test-->other_anomalies;
 ```
 
-dataset
-|
- --train
-|    |
-|     --good
-|
- --test
-     |
-     |--crack
-     |--good
-     |--dot  
-     |--joint
-      --etc.
- 
-For example, to run it for a [Marble Surface Anomaly Detection dataset](https://www.kaggle.com/datasets/wardaddy24/marble-surface-anomaly-detection-2) in Kaggle, download the dataset and update the train folder to only include the good folder. Move the sub-folders with anomaly images in train folder to either the corresponding test folders or delete them.
+For example, to run it for a [Marble Surface Anomaly Detection dataset](https://www.kaggle.com/datasets/wardaddy24/marble-surface-anomaly-detection-2) in Kaggle, download the dataset and update the train folder to only include the 'good' folder. Move the sub-folders with anomaly images in train folder to either the corresponding test folders or delete them.
 
 ### Adopt to your model
 
