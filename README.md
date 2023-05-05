@@ -21,7 +21,6 @@ The goal of this anomaly detection reference use case is to provide AI-powered v
     - [Run Using Bare Metal](#run-using-bare-metal) 
 - [Expected Output](#expected-output)
 - [Summary and Next Steps](#summary-and-next-steps)
-    - [How to customize this use case](#how-to-customize-this-use-case)
     - [Adopt to your dataset](#adopt-to-your-dataset)
     - [Adopt to your model](#adopt-to-your-model)
 - [Learn More](#learn-more)
@@ -41,7 +40,8 @@ To overcome these challenges and achieve state-of-the-art performance, we presen
 More information can be in the paper [MVTec AD – A Comprehensive Real-World Dataset for Unsupervised Anomaly Detection](https://www.mvtec.com/fileadmin/Redaktion/mvtec.com/company/research/datasets/mvtec_ad.pdf)
 
 ![Statistical_overview_of_the_MVTec_AD_dataset](assets/mvtec_dataset_characteristics.JPG)
-*Table 1:  Statistical overview of the MVTec AD dataset. For each category, the number of training and test images is given together with additional information about the defects present in the respective test images.[Source](https://www.mvtec.com/fileadmin/Redaktion/mvtec.com/company/research/datasets/mvtec_ad.pdf)*
+<br>
+*Table 1:  Statistical overview of the MVTec AD dataset. For each category, the number of training and test images is given together with additional information about the defects present in the respective test images. [Source](https://www.mvtec.com/fileadmin/Redaktion/mvtec.com/company/research/datasets/mvtec_ad.pdf)*
 
 
 ## Validated Hardware Details
@@ -62,15 +62,15 @@ Linux OS (Ubuntu 20.04) is used in this reference solution. Make sure the follow
 
 ## How It Works?
 
-This reference use case uses a deep learning based approach, named deep-feature modeling (DFM) and falls within the broader area of out-of-distribution (OOD) detection i.e. when a model sees an input that differs from its training data, it is marked as an anomaly. Learn more about the approach [here](https://arxiv.org/pdf/1909.11786.pdf) 
+This reference use case uses a deep learning based approach, named deep-feature modeling (DFM) and falls within the broader area of out-of-distribution (OOD) detection i.e. when a model sees an input that differs from its training data, it is marked as an anomaly. Learn more about the approach [here.](https://arxiv.org/pdf/1909.11786.pdf) 
 
-The use case provides 3 options for modelling of the vision subtask:
+The use case provides 3 options for modeling of the vision subtask:
 * **Pre-trained backbone:** uses a deep network (ResNet-50v1.5 in this case) that has been pretrained on large visual datasets such as ImageNet
-* **SimSiam self-supervised learning:** is a contrastive learning method based on Siamese networks. It learns meaningful representation of dataset without using any labels. SimSiam requires a dataloader such that it can produce two different augmented images from one underlying image. The end goal is to train the network to produce same features for both images. It takes a ResNet model as the backbone and fine-tunes the model on the augmented dataset to get closer feature embeddings for the use case. Read more [here](https://arxiv.org/pdf/2011.10566.pdf)
-* **Cut-Paste self-supervised learning:** is a contrastive learning method similar to SimSiam but differs in the augmentations used during training. It take a ResNet model as backbone and fine-tunes the model after applying a data augmentation strategy that cuts an image patch and pastes at a random location of a large image. This allows us to construct a high performance model for defect detection without presence of anomalous data. Read more [here](https://arxiv.org/pdf/2104.04015.pdf)
+* **SimSiam self-supervised learning:** is a contrastive learning method based on Siamese networks. It learns meaningful representation of dataset without using any labels. SimSiam requires a dataloader such that it can produce two different augmented images from one underlying image. The end goal is to train the network to produce same features for both images. It takes a ResNet model as the backbone and fine-tunes the model on the augmented dataset to get closer feature embeddings for the use case. Read more [here.](https://arxiv.org/pdf/2011.10566.pdf)
+* **Cut-Paste self-supervised learning:** is a contrastive learning method similar to SimSiam but differs in the augmentations used during training. It take a ResNet model as backbone and fine-tunes the model after applying a data augmentation strategy that cuts an image patch and pastes at a random location of a large image. This allows us to construct a high performance model for defect detection without presence of anomalous data. Read more [here.](https://arxiv.org/pdf/2104.04015.pdf)
 
 ![visual_quality_inspection_pipeline](assets/visual_quality_inspection_pipeline.JPG)
-*Figure 1: Visual quality inspection pipeline. Above diagram is an example when using SimSiam self-supervised training*
+*Figure 1: Visual quality inspection pipeline. Above diagram is an example when using SimSiam self-supervised training.*
 
 Training stage only uses defect-free data. Images are loaded using a dataloader and shuffling, resizing & normalization processing is applied. Then one of the above stated transfer learning technique is used to fine-tune a model and extract discriminative features from an intermediate layer. A PCA kernel is trained over these features to reduce the dimension of the feature space while retaining 99% variance. This pre-processing of the intermediate features of a DNN is needed to prevent matrix singularities and rank deficiencies from arising.
 
@@ -84,22 +84,18 @@ During inference, the feature from a test image is generated through the same ne
 ### Highlights of Visual Quality Inspection Reference Use Case
 - The use case is presented in a modular architecture. To improve productivity and reduce time-to-solution, transfer learning methods are made available through an independent workflow that seamlessly uses Intel Transfer Learning Tool APIs underneath and a config file allows the user to change parameters and settings without having to deep-dive and modify the code.
 - There is flexibility to select any pre-trained model and any intermediate layer for feature extraction.
-- The use case is enabled with Intel optimized foundational tools
+- The use case is enabled with Intel optimized foundational tools.
 
 
 ## Get Started
 ### Download the Workflow Repository
 Create a working directory for the reference use case and clone the [Visual Quality Inspection Workflow](https://github.com/intel/visual-quality-inspection) repository into your working directory.
 ```
-* Remove this line in final release *
-git clone https://github.com/intel-innersource/frameworks.ai.end2end-ai-pipelines.anomaly-detection-ref-use-case.git
-cd frameworks.ai.end2end-ai-pipelines.anomaly-detection-ref-use-case
-
 git clone https://github.com/intel/visual-quality-inspection
 cd visual-quality-inspection
 ```
 
-### Download the Transfer Learning Tool (TLT)
+### Download the Transfer Learning Tool
 ```
 git clone https://github.com/IntelAI/transfer-learning.git
 git submodule update --init --recursive
@@ -396,12 +392,14 @@ python anomaly_detection.py --config_file ./configs/finetuning.yaml
 
 ## Summary and Next Steps
 
+
 The reference use case above demonstrates an Anomaly Detection approach using deep feature extraction and out-of-distrabution detection. It uses a tunable, modular workflow for fine-tuning the model & extractingits features, both of which uses the Intel® Transfer Learning Tool underneath. For optimal performance on Intel architecture, the scripts are also enabled with Intel extension for PyTorch, Intel extension for scikit-learn and has an option to run bfloat16 on 4th Gen Intel Xeon scalable processors using Intel® Advanced Matrix Extensions (Intel® AMX).
 
+### How to customize this use case
 Tunable configurations and parameters are exposed using yaml config files allowing users to change model training hyperparameters, datatypes, paths, and dataset settings without having to modify or search through the code.
 
 
-### Adopt to your dataset
+#### Adopt to your dataset
 This reference use case can be easily deployed on a different or customized dataset by simply arranging the images for training and testing in the following folder structure (Note that this approach only uses good images for training):
 
 ```mermaid
@@ -418,7 +416,7 @@ graph TD;
 
 For example, to run it for a [Marble Surface Anomaly Detection dataset](https://www.kaggle.com/datasets/wardaddy24/marble-surface-anomaly-detection-2) in Kaggle, download the dataset and update the train folder to only include the 'good' folder. Move the sub-folders with anomaly images in train folder to either the corresponding test folders or delete them.
 
-### Adopt to your model
+#### Adopt to your model
 
 #### 1. Change to a different pre-trained model from Torchvision:
 Change the 'model/name' variable in configs/finetuning.yaml to the intended model e.g.: resnet18
@@ -450,3 +448,8 @@ For more information or to read about other relevant workflow examples, see thes
 
 ## Support
 If you have any questions with this workflow, want help with troubleshooting, want to report a bug or submit enhancement requests, please submit a GitHub issue.
+
+---
+
+\*Other names and brands may be claimed as the property of others.
+[Trademarks](https://www.intel.com/content/www/us/en/legal/trademarks.html).
