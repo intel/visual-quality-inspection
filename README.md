@@ -2,7 +2,7 @@
 
 Manual anomaly detection is time and labor-intensive which limits its applicability on large volumes of data that are typical in industrial settings. Application of artificial intelligence and machine learning is transforming Industrial Internet of Things (IIoT) segments by enabling higher productivity, better insights, less downtime, and superior product quality. 
 
-The goal of this anomaly detection reference use case is to provide AI-powered visual quality inspection by identifing rare, abnormal events such as defects in a part being manufactured on an industrial production line. Use this reference solution as-is on your dataset, curate it to your needs by fine-tuning the models and changing configurations to get improved performance, modify it to meet your productivity and performance goals by making use of the modular architecture and realize superior performance using the Intel optimized software packages and libraries for Intel hardware that are built into the solution.
+The goal of this anomaly detection reference use case is to provide AI-powered visual quality inspection on the high resolution input images by identifing rare, abnormal events such as defects in a part being manufactured on an industrial production line. Use this reference solution as-is on your dataset, curate it to your needs by fine-tuning the models and changing configurations to get improved performance, modify it to meet your productivity and performance goals by making use of the modular architecture and realize superior performance using the Intel optimized software packages and libraries for Intel hardware that are built into the solution.
 
 
 
@@ -350,14 +350,14 @@ NOTE:
 When using SimSiam self supervised training, download the Sim-Siam weights based on ResNet50 model and place under simsiam directory:
 ```
 mkdir simsiam
-wget https://dl.fbaipublicfiles.com/simsiam/models/100ep-256bs/pretrain/checkpoint_0099.pth.tar -o ./simsiam/checkpoint_0099.pth.tar
+wget --directory-prefix=/simsiam/ https://dl.fbaipublicfiles.com/simsiam/models/100ep-256bs/pretrain/checkpoint_0099.pth.tar -o ./simsiam/checkpoint_0099.pth.tar
 ```
 
 ### 4. Running the end-to-end use case 
 
 Using Transfer Learning Tool based fine-tuning:
 
-In finetuning.yaml, set 'fine_tune' flag to true. If you downloaded the data from [DataSet](#DataSet) change ./data/ to ./mvtec_dataset/ and set the pretrained/simsiam/cutpaste settings accordingly.
+In finetuning.yaml, set **'fine_tune'** flag to true. If you downloaded the data from [DataSet](#DataSet) **change ./data/ to ./mvtec_dataset/** and set the pretrained/simsiam/cutpaste settings accordingly.
 Change other settings as intended in finetuning.yaml to run different configurations.
 ```
 python anomaly_detection.py --config_file ./configs/finetuning.yaml
@@ -431,7 +431,14 @@ python anomaly_detection.py --config_file ./configs/finetuning.yaml
 #### 2. Plug-in your own pre-trained customized model:
 
 In finetuning.yaml, change 'fine_tune' flag to false and provide a custom model path under 'saved_model_path'.
-Change other settings as intended in config.yaml to run different configurations. Then run the application using:
+Change other settings as intended in config.yaml to run different configurations.
+
+To test the custom model with the MVTec AD dataset, add the preprocess flag to the dataset.py script to generate CSV files under all classes required for data loading:
+```
+python dataset.py -n mvtec-ad --download --preprocess -d ../../../
+```
+
+Then run the application using:
 ```
 python anomaly_detection.py --config_file ./configs/finetuning.yaml
 ```
