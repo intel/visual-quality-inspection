@@ -1,4 +1,6 @@
-FROM amr-registry.caas.intel.com/aiops/transfer-learning:prod-r0.4
+ARG IMAGE_NAME=intel/ai-workflows
+ARG IMAGE_TAG=transfer-learning-0.4.0
+FROM ${IMAGE_NAME}:${IMAGE_TAG}
 
 RUN apt-get update -y && apt-get install -y --fix-missing --no-install-recommends wget xz-utils
 
