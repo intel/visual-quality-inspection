@@ -1,10 +1,8 @@
 # Anomaly Detection: Visual Quality Inspection in the Industrial Domain
 
-Manual anomaly detection is time and labor-intensive which limits its applicability on large volumes of data that are typical in industrial settings. Application of artificial intelligence and machine learning is transforming Industrial Internet of Things (IIoT) segments by enabling higher productivity, better insights, less downtime, and superior product quality. 
+Manual anomaly detection is time and labor-intensive, which limits its applicability on large volumes of data that are typical in industrial settings. Application of artificial intelligence and machine learning is transforming Industrial Internet of Things (IIoT) segments by enabling higher productivity, better insights, less downtime, and superior product quality.
 
-The goal of this anomaly detection reference use case is to provide AI-powered visual quality inspection on the high resolution input images by identifing rare, abnormal events such as defects in a part being manufactured on an industrial production line. Use this reference solution as-is on your dataset, curate it to your needs by fine-tuning the models and changing configurations to get improved performance, modify it to meet your productivity and performance goals by making use of the modular architecture and realize superior performance using the Intel optimized software packages and libraries for Intel hardware that are built into the solution.
-
-
+The goal of this anomaly detection reference use case is to provide AI-powered visual quality inspection on high resolution input images by identifying rare, abnormal events such as defects in a part being manufactured on an industrial production line. Use this reference solution as-is on your dataset, curate it to your needs by fine-tuning the models, change configurations to get improved performance, and modify it to meet your productivity and performance goals by making use of the modular architecture and realize superior performance using the Intel optimized software packages and libraries for Intel hardware that are built into the solution.
 
 ## **Table of Contents**
 - [Technical Overview](#technical-overview)
@@ -27,9 +25,10 @@ The goal of this anomaly detection reference use case is to provide AI-powered v
 - [Support](#support)
 
 ## Technical Overview
-Classic and modern anomaly detection techniques have certain challenges: 
-- Feature engineering needs to be performed to extract representations from the raw data. Traditional ML techniques rely on hand-crafted features that may not always generalize well to other settings. 
-- Classification techniques require labeled training data, which is challenging because anomalies are typically rare occurrences and obtaining it increases the data collection & annotation effort. 
+Classic and modern anomaly detection techniques have certain challenges:
+
+- Feature engineering needs to be performed to extract representations from the raw data. Traditional ML techniques rely on hand-crafted features that may not always generalize well to other settings.
+- Classification techniques require labeled training data, which is challenging because anomalies are typically rare occurrences and obtaining it increases the data collection & annotation effort.
 - Nature of anomalies can be arbitrary and unknown where failures or defects occur for a variety of unpredictable reasons, hence it may not be possible to predict the type of anomaly.
 
 To overcome these challenges and achieve state-of-the-art performance, we present an unsupervised, mixed method end-to-end fine-tuning & inference reference solution for anomaly detection where a model of normality is learned from defect-free data in an unsupervised manner, and deviations from the models are flagged as anomalies. This reference use case is accelerated by Intel optimized software and is built upon easy-to-use Intel Transfer Learning Tool APIs.
@@ -57,6 +56,7 @@ There are workflow-specific hardware and software setup requirements depending o
 Linux OS (Ubuntu 20.04) is used in this reference solution. Make sure the following dependencies are installed.
 
 1. `sudo apt update`
+1. `sudo apt-get install -y libgl1 libglib2.0-0`
 1. pip/conda OR python3.9-venv
 1. git
 
@@ -97,9 +97,8 @@ cd visual-quality-inspection
 
 ### Download the Transfer Learning Tool
 ```
-git clone https://github.com/IntelAI/transfer-learning.git
 git submodule update --init --recursive
-export PYTHONPATH=./transfer-learning/
+export PYTHONPATH=transfer-learning/
 ```
 
 ## Ways to run this reference use case
