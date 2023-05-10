@@ -55,7 +55,7 @@ spec:
             mountPath: /workspace/config
             subPath: '{{ .Values.dataset.nfs.subPath }}/configs'
         {{ end }}
-        workingDir: /workspace
+        workingDir: /workspace/workflows/vision_anomaly_detection
         imagePullPolicy: Always
       volumes:
       - name: dshm
@@ -118,7 +118,7 @@ spec:
             mountPath: /workspace/config
             subPath: '{{ .Values.dataset.nfs.subPath }}/configs'
         {{ end }}
-        workingDir: /workspace/workflows/vision_anomaly_detection
+        workingDir: /workspace
         imagePullPolicy: Always
       volumes:
       - name: dshm

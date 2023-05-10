@@ -57,6 +57,7 @@ There are workflow-specific hardware and software setup requirements depending o
 Linux OS (Ubuntu 20.04) is used in this reference solution. Make sure the following dependencies are installed.
 
 1. `sudo apt update`
+1. `sudo apt-get install -y libgl1 libglib2.0-0`
 1. pip/conda OR python3.9-venv
 1. git
 
@@ -97,9 +98,8 @@ cd visual-quality-inspection
 
 ### Download the Transfer Learning Tool
 ```
-git clone https://github.com/IntelAI/transfer-learning.git
 git submodule update --init --recursive
-export PYTHONPATH=./transfer-learning/
+export PYTHONPATH=transfer-learning/
 ```
 
 ## Ways to run this reference use case
