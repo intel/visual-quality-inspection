@@ -1,5 +1,7 @@
 # Anomaly Detection: Visual Quality Inspection in the Industrial Domain
 
+
+## Introduction
 Manual anomaly detection is time and labor-intensive which limits its applicability on large volumes of data that are typical in industrial settings. Application of artificial intelligence and machine learning is transforming Industrial Internet of Things (IIoT) segments by enabling higher productivity, better insights, less downtime, and superior product quality. 
 
 The goal of this anomaly detection reference use case is to provide AI-powered visual quality inspection on the high resolution input images by identifing rare, abnormal events such as defects in a part being manufactured on an industrial production line. Use this reference solution as-is on your dataset, curate it to your needs by fine-tuning the models and changing configurations to get improved performance, modify it to meet your productivity and performance goals by making use of the modular architecture and realize superior performance using the Intel optimized software packages and libraries for Intel hardware that are built into the solution.
@@ -26,7 +28,7 @@ The goal of this anomaly detection reference use case is to provide AI-powered v
 - [Learn More](#learn-more)
 - [Support](#support)
 
-## Technical Overview
+## Solution Technical Overview
 Classic and modern anomaly detection techniques have certain challenges: 
 - Feature engineering needs to be performed to extract representations from the raw data. Traditional ML techniques rely on hand-crafted features that may not always generalize well to other settings. 
 - Classification techniques require labeled training data, which is challenging because anomalies are typically rare occurrences and obtaining it increases the data collection & annotation effort. 
@@ -90,8 +92,14 @@ During inference, the feature from a test image is generated through the same ne
 
 ## Get Started
 ### Download the Workflow Repository
+Define an environment variable that will store the workspace path, this can be an existing directory or one created specifically for this reference use case. 
+```
+export WORKSPACE=/path/to/workspace/directory
+```
+
 Create a working directory for the reference use case and clone the [Visual Quality Inspection Workflow](https://github.com/intel/visual-quality-inspection) repository into your working directory.
 ```
+mkdir -p $WORKSPACE && cd $WORKSPACE
 git clone https://github.com/intel/visual-quality-inspection
 cd visual-quality-inspection
 ```
@@ -99,7 +107,7 @@ cd visual-quality-inspection
 ### Download the Transfer Learning Tool
 ```
 git submodule update --init --recursive
-export PYTHONPATH=transfer-learning/
+export PYTHONPATH=$WORKSPACE/visual-quality-inspection/transfer-learning/
 ```
 
 ## Ways to run this reference use case
@@ -323,6 +331,7 @@ pip install -r requirements.txt
 
 Download the mvtec dataset using Intel Model Zoo dataset download API
 ```
+cd $WORKSPACE
 git clone https://github.com/IntelAI/models.git
 cd models/datasets/dataset_api/
 ```
@@ -336,7 +345,7 @@ python dataset.py -n mvtec-ad --download -d ../../../
 
 Extract the tar file
 ```
-cd ../../../
+cd $WORKSPACE
 mkdir mvtec_dataset
 tar -xf mvtec_anomaly_detection.tar.xz --directory mvtec_dataset
 ```
@@ -349,6 +358,7 @@ Select the parameters and configurations in the [finetuning.yaml](configs/README
 NOTE: 
 When using SimSiam self supervised training, download the Sim-Siam weights based on ResNet50 model and place under simsiam directory:
 ```
+cd $WORKSPACE/visual-quality-inspection/
 mkdir simsiam
 wget --directory-prefix=/simsiam/ https://dl.fbaipublicfiles.com/simsiam/models/100ep-256bs/pretrain/checkpoint_0099.pth.tar -o ./simsiam/checkpoint_0099.pth.tar
 ```
@@ -360,6 +370,7 @@ Using Transfer Learning Tool based fine-tuning:
 In finetuning.yaml, set **'fine_tune'** flag to true. If you downloaded the data from [DataSet](#DataSet) **change ./data/ to ./mvtec_dataset/** and set the pretrained/simsiam/cutpaste settings accordingly.
 Change other settings as intended in finetuning.yaml to run different configurations.
 ```
+cd $WORKSPACE/visual-quality-inspection/
 python anomaly_detection.py --config_file ./configs/finetuning.yaml
 ```
 
@@ -435,11 +446,13 @@ Change other settings as intended in config.yaml to run different configurations
 
 To test the custom model with the MVTec AD dataset, add the preprocess flag to the dataset.py script to generate CSV files under all classes required for data loading:
 ```
+cd $WORKSPACE/visual-quality-inspection/
 python dataset.py -n mvtec-ad --download --preprocess -d ../../../
 ```
 
 Then run the application using:
 ```
+cd $WORKSPACE/visual-quality-inspection/
 python anomaly_detection.py --config_file ./configs/finetuning.yaml
 ```
 
