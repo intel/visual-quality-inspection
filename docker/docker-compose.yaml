@@ -7,17 +7,17 @@ services:
         no_proxy: ${no_proxy}
       context: ../
       dockerfile: ./docker/Dockerfile
-    command: python /workspace/intel-models/datasets/dataset_api/dataset.py -n mvtec-ad --download --preprocess -d /workspace/data
+    command: bash -c 'echo $USER_CONSENT | python -m dataset_librarian.dataset -n mvtec-ad --download --preprocess -d /workspace/data'
     environment:
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
       - no_proxy=${no_proxy}
       - USER_CONSENT=${USER_CONSENT}
-    image: intel/ai-workflows:beta-anomaly-detection
+    image: intel/ai-workflows:pa-anomaly-detection
     privileged: true
     volumes:
       - /${DATASET_DIR:-$PWD/../data}:/workspace/data
-    working_dir: /workspace/intel-models/datasets/dataset_api
+    working_dir: /workspace/
 
   stock-tlt-fine-tuning:
     build:
@@ -33,7 +33,7 @@ services:
       - https_proxy=${https_proxy}
       - no_proxy=${no_proxy}
       - PYTHONPATH=/workspace
-    image: intel/ai-workflows:beta-tlt-anomaly-detection
+    image: intel/ai-workflows:pa-tlt-anomaly-detection
     privileged: true
     shm_size: 8GB
     volumes: 
@@ -51,7 +51,7 @@ services:
       - https_proxy=${https_proxy}
       - no_proxy=${no_proxy}
       - PYTHONPATH=/workspace/transfer-learning
-    image: intel/ai-workflows:beta-anomaly-detection
+    image: intel/ai-workflows:pa-anomaly-detection
     privileged: true
     shm_size: 8GB
     volumes: 
@@ -67,7 +67,7 @@ services:
       - https_proxy=${https_proxy}
       - no_proxy=${no_proxy}
       - PYTHONPATH=/workspace
-    image: intel/ai-workflows:${TAG:-beta-anomaly-detection}
+    image: intel/ai-workflows:${TAG:-pa-anomaly-detection}
     privileged: true
     shm_size: 8GB
     stdin_open: true

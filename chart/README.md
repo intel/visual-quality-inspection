@@ -18,5 +18,6 @@ A Helm chart for Kubernetes
 | image.use_case | string | `"beta-anomaly-detection"` | evaluation container tag |
 | metadata.name | string | `"anomaly-detection"` |  |
 | proxy | string | `"nil"` |  |
+| serviceAccountName | string | `"argo"` | Service Account Name for Argo |
 | workflow.config.inference | string | `"eval"` | config file name for inference |
 | workflow.config.training | string | `"finetuning"` | config file name for training |

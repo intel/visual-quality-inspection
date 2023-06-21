@@ -1,6 +1,11 @@
 # Anomaly Detection: Visual Quality Inspection in the Industrial Domain
 
-Manual anomaly detection is time and labor-intensive, which limits its applicability on large volumes of data that are typical in industrial settings. Application of artificial intelligence and machine learning is transforming Industrial Internet of Things (IIoT) segments by enabling higher productivity, better insights, less downtime, and superior product quality.
+
+## Introduction
+Manual anomaly detection is time and labor-intensive which limits its applicability on large volumes of data that are typical in industrial settings. Application of artificial intelligence and machine learning is transforming Industrial Internet of Things (IIoT) segments by enabling higher productivity, better insights, less downtime, and superior product quality. 
+
+The goal of this anomaly detection reference use case is to provide AI-powered visual quality inspection on the high resolution input images by identifing rare, abnormal events such as defects in a part being manufactured on an industrial production line. Use this reference solution as-is on your dataset, curate it to your needs by fine-tuning the models and changing configurations to get improved performance, modify it to meet your productivity and performance goals by making use of the modular architecture and realize superior performance using the Intel optimized software packages and libraries for Intel hardware that are built into the solution.
+
 
 The goal of this anomaly detection reference use case is to provide AI-powered visual quality inspection on high resolution input images by identifying rare, abnormal events such as defects in a part being manufactured on an industrial production line. Use this reference solution as-is on your dataset, curate it to your needs by fine-tuning the models, change configurations to get improved performance, and modify it to meet your productivity and performance goals by making use of the modular architecture and realize superior performance using the Intel optimized software packages and libraries for Intel hardware that are built into the solution.
 
@@ -24,11 +29,10 @@ The goal of this anomaly detection reference use case is to provide AI-powered v
 - [Learn More](#learn-more)
 - [Support](#support)
 
-## Technical Overview
-Classic and modern anomaly detection techniques have certain challenges:
-
-- Feature engineering needs to be performed to extract representations from the raw data. Traditional ML techniques rely on hand-crafted features that may not always generalize well to other settings.
-- Classification techniques require labeled training data, which is challenging because anomalies are typically rare occurrences and obtaining it increases the data collection & annotation effort.
+## Solution Technical Overview
+Classic and modern anomaly detection techniques have certain challenges: 
+- Feature engineering needs to be performed to extract representations from the raw data. Traditional ML techniques rely on hand-crafted features that may not always generalize well to other settings. 
+- Classification techniques require labeled training data, which is challenging because anomalies are typically rare occurrences and obtaining it increases the data collection & annotation effort. 
 - Nature of anomalies can be arbitrary and unknown where failures or defects occur for a variety of unpredictable reasons, hence it may not be possible to predict the type of anomaly.
 
 To overcome these challenges and achieve state-of-the-art performance, we present an unsupervised, mixed method end-to-end fine-tuning & inference reference solution for anomaly detection where a model of normality is learned from defect-free data in an unsupervised manner, and deviations from the models are flagged as anomalies. This reference use case is accelerated by Intel optimized software and is built upon easy-to-use Intel Transfer Learning Tool APIs.
@@ -88,17 +92,31 @@ During inference, the feature from a test image is generated through the same ne
 
 
 ## Get Started
+
+Start by defining an environment variable that will store the workspace path, this can be an existing directory or one to be created in further steps. This ENVVAR will be used for all the commands executed using absolute paths.
+
+E. g.
+```
+export WORKSPACE=/mydisk/mtw/mywork
+```
+
 ### Download the Workflow Repository
+Define an environment variable that will store the workspace path, this can be an existing directory or one created specifically for this reference use case. 
+```
+export WORKSPACE=/path/to/workspace/directory
+```
+
 Create a working directory for the reference use case and clone the [Visual Quality Inspection Workflow](https://github.com/intel/visual-quality-inspection) repository into your working directory.
 ```
+mkdir -p $WORKSPACE && cd $WORKSPACE
 git clone https://github.com/intel/visual-quality-inspection
-cd visual-quality-inspection
+cd $WORKSPACE/visual-quality-inspection
 ```
 
 ### Download the Transfer Learning Tool
 ```
 git submodule update --init --recursive
-export PYTHONPATH=transfer-learning/
+export PYTHONPATH=$WORKSPACE/visual-quality-inspection/transfer-learning/
 ```
 
 ## Ways to run this reference use case
@@ -135,15 +153,14 @@ Ensure you have completed steps in the [Get Started Section](#get-started).
 Build or Pull the provided docker image.
 
 ```bash
-git clone https://github.com/IntelAI/models -b r2.11 intel-models
-cd docker
+cd $WORKSPACE/visual-quality-inspection/docker
 docker compose build
 cd ..
 ```
 OR
 ```bash
-docker pull intel/ai-workflows:beta-anomaly-detection
-docker pull intel/ai-workflows:beta-tlt-anomaly-detection
+docker pull intel/ai-workflows:pa-anomaly-detection
+docker pull intel/ai-workflows:pa-tlt-anomaly-detection
 ```
 
 ### 4. Preprocess Dataset with Docker Compose
@@ -152,7 +169,7 @@ Prepare dataset for Anomaly Detection workflows and accept the legal agreement t
 ```bash
 mkdir data && chmod 777 data
 cd docker
-docker compose run -e USER_CONSENT=y preprocess 
+USER_CONSENT=y docker compose run preprocess 
 ```
 
 | Environment Variable Name | Default Value | Description |
@@ -260,7 +277,7 @@ docker run -a stdout ${DOCKER_RUN_ENVS} \
            -v /${DATASET_DIR}:/workspace/data \
            -v /${OUTPUT_DIR}:/workspace/output \
            --privileged --init -it --rm --pull always --shm-size=8GB \
-           intel/ai-workflows:beta-anomaly-detection \
+           intel/ai-workflows:pa-anomaly-detection \
            bash
 ```
 
@@ -322,6 +339,7 @@ pip install -r requirements.txt
 
 Download the mvtec dataset using Intel Model Zoo dataset download API
 ```
+cd $WORKSPACE
 git clone https://github.com/IntelAI/models.git
 cd models/datasets/dataset_api/
 ```
@@ -335,7 +353,7 @@ python dataset.py -n mvtec-ad --download -d ../../../
 
 Extract the tar file
 ```
-cd ../../../
+cd $WORKSPACE
 mkdir mvtec_dataset
 tar -xf mvtec_anomaly_detection.tar.xz --directory mvtec_dataset
 ```
@@ -348,6 +366,7 @@ Select the parameters and configurations in the [finetuning.yaml](configs/README
 NOTE: 
 When using SimSiam self supervised training, download the Sim-Siam weights based on ResNet50 model and place under simsiam directory:
 ```
+cd $WORKSPACE/visual-quality-inspection/
 mkdir simsiam
 wget --directory-prefix=/simsiam/ https://dl.fbaipublicfiles.com/simsiam/models/100ep-256bs/pretrain/checkpoint_0099.pth.tar -o ./simsiam/checkpoint_0099.pth.tar
 ```
@@ -359,6 +378,7 @@ Using Transfer Learning Tool based fine-tuning:
 In finetuning.yaml, set **'fine_tune'** flag to true. If you downloaded the data from [DataSet](#DataSet) **change ./data/ to ./mvtec_dataset/** and set the pretrained/simsiam/cutpaste settings accordingly.
 Change other settings as intended in finetuning.yaml to run different configurations.
 ```
+cd $WORKSPACE/visual-quality-inspection/
 python anomaly_detection.py --config_file ./configs/finetuning.yaml
 ```
 
@@ -391,8 +411,9 @@ python anomaly_detection.py --config_file ./configs/finetuning.yaml
 
 ## Summary and Next Steps
 
+* If you want to enable distributed training on k8s for your use case, please follow steps to apply that configuration mentioned here [Intel® Transfer Learning Tools](https://github.com/IntelAI/transfer-learning/docker/README.md#kubernetes) which provides insights into k8s operators and yml file creation.
 
-The reference use case above demonstrates an Anomaly Detection approach using deep feature extraction and out-of-distrabution detection. It uses a tunable, modular workflow for fine-tuning the model & extractingits features, both of which uses the Intel® Transfer Learning Tool underneath. For optimal performance on Intel architecture, the scripts are also enabled with Intel extension for PyTorch, Intel extension for scikit-learn and has an option to run bfloat16 on 4th Gen Intel Xeon scalable processors using Intel® Advanced Matrix Extensions (Intel® AMX).
+* The reference use case above demonstrates an Anomaly Detection approach using deep feature extraction and out-of-distrabution detection. It uses a tunable, modular workflow for fine-tuning the model & extractingits features, both of which uses the Intel® Transfer Learning Tool underneath. For optimal performance on Intel architecture, the scripts are also enabled with Intel extension for PyTorch, Intel extension for scikit-learn and has an option to run bfloat16 on 4th Gen Intel Xeon scalable processors using Intel® Advanced Matrix Extensions (Intel® AMX).
 
 ### How to customize this use case
 Tunable configurations and parameters are exposed using yaml config files allowing users to change model training hyperparameters, datatypes, paths, and dataset settings without having to modify or search through the code.
@@ -434,11 +455,13 @@ Change other settings as intended in config.yaml to run different configurations
 
 To test the custom model with the MVTec AD dataset, add the preprocess flag to the dataset.py script to generate CSV files under all classes required for data loading:
 ```
+cd $WORKSPACE/visual-quality-inspection/
 python dataset.py -n mvtec-ad --download --preprocess -d ../../../
 ```
 
 Then run the application using:
 ```
+cd $WORKSPACE/visual-quality-inspection/
 python anomaly_detection.py --config_file ./configs/finetuning.yaml
 ```
 

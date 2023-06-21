@@ -1,3 +1,4 @@
+serviceAccountName: argo
 metadata:
   name: anomaly-detection
 proxy: nil
