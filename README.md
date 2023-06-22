@@ -93,18 +93,12 @@ During inference, the feature from a test image is generated through the same ne
 
 ## Get Started
 
-Start by defining an environment variable that will store the workspace path, this can be an existing directory or one to be created in further steps. This ENVVAR will be used for all the commands executed using absolute paths.
-
-E. g.
-```
-export WORKSPACE=/mydisk/mtw/mywork
-```
-
-### Download the Workflow Repository
 Define an environment variable that will store the workspace path, this can be an existing directory or one created specifically for this reference use case. 
 ```
 export WORKSPACE=/path/to/workspace/directory
 ```
+
+### Download the Workflow Repository
 
 Create a working directory for the reference use case and clone the [Visual Quality Inspection Workflow](https://github.com/intel/visual-quality-inspection) repository into your working directory.
 ```
@@ -155,7 +149,6 @@ Build or Pull the provided docker image.
 ```bash
 cd $WORKSPACE/visual-quality-inspection/docker
 docker compose build
-cd ..
 ```
 OR
 ```bash
@@ -167,8 +160,8 @@ docker pull intel/ai-workflows:pa-tlt-anomaly-detection
 Prepare dataset for Anomaly Detection workflows and accept the legal agreement to use the Intel Dataset Downloader.
 
 ```bash
-mkdir data && chmod 777 data
-cd docker
+mkdir $WORKSPACE/data && chmod 777 $WORKSPACE/data
+cd $WORKSPACE/docker
 USER_CONSENT=y docker compose run preprocess 
 ```
 
@@ -337,27 +330,12 @@ pip install -r requirements.txt
 
 ### 2. Download the dataset
 
-Download the mvtec dataset using Intel Model Zoo dataset download API
+Download the mvtec dataset using Intel Model Zoo Dataset Librarian
 ```
-cd $WORKSPACE
-git clone https://github.com/IntelAI/models.git
-cd models/datasets/dataset_api/
+pip install dataset-librarian
+mkdir $WORKSPACE/visual-quality-inspection/data
+python -m dataset_librarian.dataset -n mvtec-ad --download --preprocess -d $WORKSPACE/visual-quality-inspection/data
 ```
-
-Install dependencies and download the dataset
-```
-pip install -r requirements.txt
-./setup.sh
-python dataset.py -n mvtec-ad --download -d ../../../
-```
-
-Extract the tar file
-```
-cd $WORKSPACE
-mkdir mvtec_dataset
-tar -xf mvtec_anomaly_detection.tar.xz --directory mvtec_dataset
-```
-
 
 ### 3. Select parameters and configurations
 
@@ -366,9 +344,8 @@ Select the parameters and configurations in the [finetuning.yaml](configs/README
 NOTE: 
 When using SimSiam self supervised training, download the Sim-Siam weights based on ResNet50 model and place under simsiam directory:
 ```
-cd $WORKSPACE/visual-quality-inspection/
-mkdir simsiam
-wget --directory-prefix=/simsiam/ https://dl.fbaipublicfiles.com/simsiam/models/100ep-256bs/pretrain/checkpoint_0099.pth.tar -o ./simsiam/checkpoint_0099.pth.tar
+mkdir $WORKSPACE/visual-quality-inspection/simsiam
+wget --directory-prefix=/simsiam/ https://dl.fbaipublicfiles.com/simsiam/models/100ep-256bs/pretrain/checkpoint_0099.pth.tar -o $WORKSPACE/visual-quality-inspection/simsiam/checkpoint_0099.pth.tar
 ```
 
 ### 4. Running the end-to-end use case 
@@ -378,8 +355,8 @@ Using Transfer Learning Tool based fine-tuning:
 In finetuning.yaml, set **'fine_tune'** flag to true. If you downloaded the data from [DataSet](#DataSet) **change ./data/ to ./mvtec_dataset/** and set the pretrained/simsiam/cutpaste settings accordingly.
 Change other settings as intended in finetuning.yaml to run different configurations.
 ```
-cd $WORKSPACE/visual-quality-inspection/
-python anomaly_detection.py --config_file ./configs/finetuning.yaml
+cd $WORKSPACE
+python anomaly_detection.py --config_file $WORKSPACE/visual-quality-inspection/configs/finetuning.yaml
 ```
 
 ## Expected Output
@@ -439,12 +416,12 @@ For example, to run it for a [Marble Surface Anomaly Detection dataset](https://
 #### Adopt to your model
 
 #### 1. Change to a different pre-trained model from Torchvision:
-Change the 'model/name' variable in configs/finetuning.yaml to the intended model e.g.: resnet18
+Change the 'model/name' variable in $WORKSPACE/visual-quality-inspection/configs/finetuning.yaml to the intended model e.g.: resnet18
 
 For simsiam, download the Sim-Siam weights based on the new model and place it under the simsiam directory. If no pre-trained simsiam weights are available, fine-tuning will take time and have to be run for more epochs. 
 Change other settings as intended in config.yaml to run different configurations. Then run the application using:
 ```
-python anomaly_detection.py --config_file ./configs/finetuning.yaml
+python anomaly_detection.py --config_file $WORKSPACE/visual-quality-inspection/configs/finetuning.yaml
 ```
 
 
@@ -455,14 +432,12 @@ Change other settings as intended in config.yaml to run different configurations
 
 To test the custom model with the MVTec AD dataset, add the preprocess flag to the dataset.py script to generate CSV files under all classes required for data loading:
 ```
-cd $WORKSPACE/visual-quality-inspection/
 python dataset.py -n mvtec-ad --download --preprocess -d ../../../
 ```
 
 Then run the application using:
 ```
-cd $WORKSPACE/visual-quality-inspection/
-python anomaly_detection.py --config_file ./configs/finetuning.yaml
+python anomaly_detection.py --config_file $WORKSPACE/visual-quality-inspection/configs/finetuning.yaml
 ```
 
 
