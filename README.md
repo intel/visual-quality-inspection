@@ -160,8 +160,8 @@ docker pull intel/ai-workflows:pa-tlt-anomaly-detection
 Prepare dataset for Anomaly Detection workflows and accept the legal agreement to use the Intel Dataset Downloader.
 
 ```bash
-mkdir $WORKSPACE/data && chmod 777 $WORKSPACE/data
-cd $WORKSPACE/docker
+mkdir -p $WORKSPACE/data && chmod 777 $WORKSPACE/data
+cd $WORKSPACE/visual-quality-inspection/docker
 USER_CONSENT=y docker compose run preprocess 
 ```
 
@@ -355,7 +355,7 @@ Using Transfer Learning Tool based fine-tuning:
 In finetuning.yaml, set **'fine_tune'** flag to true. If you downloaded the data from [DataSet](#DataSet) **change ./data/ to ./mvtec_dataset/** and set the pretrained/simsiam/cutpaste settings accordingly.
 Change other settings as intended in finetuning.yaml to run different configurations.
 ```
-cd $WORKSPACE
+cd $WORKSPACE/visual-quality-inspection
 python anomaly_detection.py --config_file $WORKSPACE/visual-quality-inspection/configs/finetuning.yaml
 ```
 
