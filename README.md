@@ -50,11 +50,15 @@ More information can be in the paper [MVTec AD – A Comprehensive Real-World Da
 ## Validated Hardware Details
 There are workflow-specific hardware and software setup requirements depending on how the workflow is run. Bare metal development system and Docker image running locally have the same system requirements. 
 
+
+### On premise
 | Recommended Hardware         | Precision  |
 | ---------------------------- | ---------- |
 | Intel® 4th Gen Xeon® Scalable Performance processors| float32, bfloat16 |
 | Intel® 1st, 2nd, 3rd Gen Xeon® Scalable Performance processors| float32 |
 
+### On cloud instance
+The reference architecture has been validated to run on AWS m6i.16xlarge instance that has Intel(R) Xeon(R) Platinum 8375C CPU @ 2.90GHz, 64 vCPU, 256 GiB memory, 30 GB SSD storage, Ubuntu 22.04.2 LTS. The instance was hosted under dedicated tenancy and requires atleast 30 GB storage to accomodate the code and dataset.
 
 ## Software Requirements 
 Linux OS (Ubuntu 20.04) is used in this reference solution. Make sure the following dependencies are installed.
