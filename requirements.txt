@@ -1,11 +1,12 @@
-numpy
-pandas
-Pillow
-prettytable
-scikit-learn-intelex
-intel_extension_for_pytorch
+numpy~=1.25.1
+pandas~=2.0.3
+Pillow~=10.0.0
+prettytable~=3.8.0
+scikit-learn-intelex==2023.2.1
+intel-extension-for-pytorch==2.0.100
 torch --index-url https://download.pytorch.org/whl/cpu
 torchvision --index-url https://download.pytorch.org/whl/cpu
-tqdm
-pyyaml
-dill
+tqdm~=4.65.0
+PyYAML~=6.0.1
+dill~=0.3.6
+neural-compressor~=2.1.1
