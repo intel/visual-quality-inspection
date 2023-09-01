@@ -20,7 +20,7 @@ The goal of this anomaly detection reference use case is to provide AI-powered v
   - [Download the Transfer Learning Tool](#Download-the-Transfer-Learning-Tool)
 - [Ways to run this reference use case](#Ways-to-run-this-reference-use-case)
   - [Run Using Docker](#run-using-docker)
-  - [Run Using Jupyter](#run-using-jupiter)
+  - [Jupyter](#run-using-jupyter)
   - [Run Using Argo Workflows on K8s using Helm](#run-using-argo-workflows-on-k8s-using-helm)
   - [Run Using Bare Metal](#run-using-bare-metal)
 - [Expected Output](#expected-output)
