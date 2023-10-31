@@ -457,6 +457,21 @@ For more information or to read about other relevant workflow examples, see thes
 ## Support
 If you have any questions with this workflow, want help with troubleshooting, want to report a bug or submit enhancement requests, please submit a GitHub issue.
 
+## Disclaimer
+These materials are intended to assist designers who are developing applications within their scope. These materials do not purport to provide all of the requirements for a commercial, productions, or other solution. Any commercial or productions use of solution based on or derived from these materials is beyond their scope. You are solely responsible for the engineering, testing, safety, qualification, validation, and applicable approvals for any solution you build or use based on these materials. Intel bears no responsibility or liability for such use. You are solely responsible for using your independent analysis, evaluation and judgment in designing your applications and have full and exclusive responsibility to assure the safety of your applications and compliance of your applications with all applicable regulations, laws and other applicable requirements. You further understand that you are solely responsible for obtaining any licenses to third-party intellectual property rights that may be necessary for your applications or the use of these materials.
+ 
+To the extent that any public or non-Intel datasets or models are referenced by or accessed using these materials those datasets or models are provided by the third party indicated as the content source. Intel does not create the content and does not warrant its accuracy or quality. By accessing the public content, or using materials trained on or with such content, you agree to the terms associated with that content and that your use complies with the applicable license.
+ 
+Intel expressly disclaims the accuracy, adequacy, or completeness of any such public content, and is not liable for any errors, omissions, or defects in the content, or for any reliance on the content. Intel is not liable for any liability or damages relating to your use of public content.
+ 
+Intel’s provision of these resources does not expand or otherwise alter Intel’s applicable published warranties or warranty disclaimers for Intel products or solutions, and no additional obligations, indemnifications, or liabilities arise from Intel providing such resources. Intel reserves the right, without notice, to make corrections, enhancements, improvements, and other changes to its materials.
+ 
+Intel technologies may require enabled hardware, software or service activation. Performance varies by use, configuration and other factors. No product or component can be absolutely secure.
+ 
+Intel is committed to respecting human rights and avoiding complicity in human rights abuses. See [Intel's Global Human Rights Principles](https://www.intel.com/content/www/us/en/policy/policy-human-rights.html). Intel's content is intended only to be used in applications that do not cause or contribute to a violation of an internationally recognized human right.
+ 
+© Intel Corporation. Intel, the Intel logo, and other Intel marks are trademarks of Intel Corporation or its subsidiaries. Other names and brands may be claimed as the property of others.
+
 ---
 
 \*Other names and brands may be claimed as the property of others.
