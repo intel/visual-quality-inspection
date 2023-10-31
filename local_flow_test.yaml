@@ -1,0 +1,97 @@
+----
+flow: flow_with_script
+recurring: 
+next_run_utc: 
+tasks:
+- input: python dataset_download.py
+  params: []
+  computes:
+  - SPR.small
+  image: intel/ai-workflows:pa-anomaly-detection
+  description: dataset
+  type: exec
+  git_commit: 
+  git_branch: 
+  mount_folders: []
+  icon: 
+  output_dir: output
+  confirmation: false
+  standalone_mode: false
+  notify_on_error: false
+  notify_on_success: false
+  emails: []
+  objective: 
+  objective_goal: 
+  objective_function: min
+  max_jobs: -1
+  parallel_jobs: -1
+  algorithm: GridSearch
+  queue_slug: ildjaux68t7dxx7q55lc
+  title: dataset
+  top: 50
+  left: 50
+  conditions: []
+  commit: 97c6db4d5844bb9001a56cc0f116c09555d75470
+- input: python anomaly_detection.py --config_file finetuning.yaml
+  params: []
+  computes:
+  - SPR.small
+  image: ai-workflows:pa-tlt-anomaly-detection
+  description: finetuning
+  type: exec
+  git_commit: 
+  git_branch: 
+  mount_folders: []
+  icon: 
+  output_dir: output
+  confirmation: false
+  standalone_mode: false
+  notify_on_error: false
+  notify_on_success: false
+  emails: []
+  objective: 
+  objective_goal: 
+  objective_function: min
+  max_jobs: -1
+  parallel_jobs: -1
+  algorithm: GridSearch
+  queue_slug: ildjaux68t7dxx7q55lc
+  title: finetuning
+  top: 158
+  left: 379
+  conditions: []
+  commit: 97c6db4d5844bb9001a56cc0f116c09555d75470
+- input: python anomaly_detection.py --config_file eval.yaml
+  params: []
+  computes:
+  - SPR.small
+  image: intel/ai-workflows:pa-anomaly-detection
+  description: inference
+  type: exec
+  git_commit: 
+  git_branch: 
+  mount_folders: []
+  icon: 
+  output_dir: output
+  confirmation: false
+  standalone_mode: false
+  notify_on_error: false
+  notify_on_success: false
+  emails: []
+  objective: 
+  objective_goal: 
+  objective_function: min
+  max_jobs: -1
+  parallel_jobs: -1
+  algorithm: GridSearch
+  queue_slug: ildjaux68t7dxx7q55lc
+  title: inference
+  top: 38
+  left: 704
+  conditions: []
+  commit: 97c6db4d5844bb9001a56cc0f116c09555d75470
+relations:
+- from: dataset
+  to: finetuning
+- from: finetuning
+  to: inference

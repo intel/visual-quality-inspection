@@ -1,0 +1,114 @@
+# Copyright (c) 2022 Intel Corporation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in
+# the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+# the Software, and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+# SPDX-License-Identifier: MIT
+
+title: Visual Quality Inspection
+version: 1.0.0
+description: Identifies defects in images
+
+
+author: "Intel"
+author_email: "info@cnvrg.io"
+
+tags:
+  - training, inference
+
+tasks:
+  - title: Dataset
+    top: 50
+    left: 50
+
+    type: exec
+
+    # The library data
+    library: Dataset
+    library_version: 1.0.0
+    # The flattened library parameters (in this case we have training library)
+    command: python download_dataset.py
+
+    requirements:
+      cpu: 64
+      memory: 64
+      gpu: 0
+      hpu: 0
+
+    image: docker.io/intel/ai-workflows:pa-anomaly-detection
+    language: python3
+
+
+  - title: finetuning
+    top: 146
+    left: 304
+
+    type: exec
+
+    library: finetuning
+    library_version: 1.0.0
+
+    command: python anomaly_detection.py
+
+    requirements:
+      cpu: 64
+      memory: 64
+      gpu: 0
+      hpu: 0
+
+    image: docker.io/intel/ai-workflows:pa-tlt-anomaly-detection
+    language: python3
+    
+    params: 
+    - key: config_file
+      type: 'categorical'
+      values:
+      - 'finetune.yaml'
+
+      
+  - title: Inference
+    top: 51
+    left: 602
+
+    type: exec
+
+    library: Inference
+    library_version: 1.0.0
+
+    command: python anomaly_detection.py
+
+    requirements:
+      cpu: 64
+      memory: 64
+      gpu: 0
+      hpu: 0
+
+    image: docker.io/intel/ai-workflows:pa-anomaly_detection
+    language: python3
+
+
+    - key: config_file
+      type: 'categorical'
+      values:
+      - 'eval.yaml'
+     
+     
+relations:
+- from: dataset
+  to: finetuning
+- from: finetuning
+  to: inference
