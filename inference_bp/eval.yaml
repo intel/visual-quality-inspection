@@ -4,7 +4,7 @@ fine_tune : false
 output_path: ./output  # path to save the checkpoints or final model
 tlt_wf_path: ./transfer-learning/workflows/vision_anomaly_detection
 dataset:
-  root_dir: ./data # full path of root directory of MVTEC dataset
+  root_dir: /input/dataset/data # full path of root directory of MVTEC dataset
   category_type: hazelnut # category type within MVTEC dataset, i.e. hazelnut or all (for running all categories in MVTEC)
   batch_size: 32 # inference batch size
   image_size: 224 # each image resized to this size (224x224)
