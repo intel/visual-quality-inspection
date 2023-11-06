@@ -1,7 +1,7 @@
 num_workers: 32 # number of parallel threads to process the data
 precision: float32 # supported options are [float32, bfloat16]
 fine_tune : false
-output_path: ./output  # path to save the checkpoints or final model
+output_path: /input/finetuning/output  # path to save the checkpoints or final model
 tlt_wf_path: ./transfer-learning/workflows/vision_anomaly_detection
 dataset:
   root_dir: /input/dataset/data # full path of root directory of MVTEC dataset
@@ -20,7 +20,7 @@ simsiam:
   batch_size: 64 # fine-tuning batch size
   epochs: 2 # number of epochs to fine-tune the model
   optim: 'sgd' # optimizer
-  model_path: './output' # path to save the checkpoints or final model
+  model_path: '/input/finetuning/output' # path to save the checkpoints or final model
   ckpt: true  # flag for whether intermediate checkpoints would be saved or not
   initial_ckpt:
 cutpaste:
@@ -30,7 +30,7 @@ cutpaste:
   batch_size: 64 # fine-tuning batch size
   epochs: 2 # number of epochs to fine-tune the model
   optim: 'sgd' # optimizer
-  model_path: './output' # path to save the checkpoints or final model
+  model_path: '/input/finetuning/output' # path to save the checkpoints or final model
   ckpt: true # flag for whether intermediate checkpoints would be saved or not
 pca:
   pca_thresholds: 0.99 # PCA select number of components such that it ensures to retain the variance ratio specified
