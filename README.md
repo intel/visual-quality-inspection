@@ -20,6 +20,7 @@ The goal of this anomaly detection reference use case is to provide AI-powered v
     - [Download the Transfer Learning Tool](#Download-the-Transfer-Learning-Tool)
 - [Ways to run this reference use case](#Ways-to-run-this-reference-use-case)
     - [Run Using Docker](#run-using-docker)
+    - [Jupyter](#run-using-jupyter)
     - [Run Using Argo Workflows on K8s using Helm](#run-using-argo-workflows-on-k8s-using-helm)
     - [Run Using Bare Metal](#run-using-bare-metal) 
 - [Expected Output](#expected-output)
@@ -121,6 +122,7 @@ export PYTHONPATH=$WORKSPACE/visual-quality-inspection/transfer-learning/
 This reference kit offers three options for running the fine-tuning and inference processes:
 
 - [Docker](#run-using-docker)
+- [Jupyter](#run-using-jupyter)
 - [Argo Workflows on K8s Using Helm](#run-using-argo-workflows-on-k8s-using-helm)
 - [Bare Metal](#run-using-bare-metal)
 
@@ -289,6 +291,34 @@ Stop containers created by docker compose and remove them.
 ```bash
 docker compose down
 ```
+
+### Run Using Jupyter
+
+#### 1 Set up conda
+
+To learn more, please visit [install anaconda on Linux](https://docs.anaconda.com/free/anaconda/install/linux/).
+
+```bash
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
+```
+
+#### 2 Create and activate conda environment
+
+To be able to run `Anomaly_Detection_Notebook.ipynb` a conda environment must be created:
+
+```bash
+conda create -n anomaly_det_refkit -c conda-forge jupyterlab nb_conda_kernels python=3.9 -y
+conda activate anomaly_det_refkit
+```
+
+Follow the steps in [Get Started](#get-started) section before continuing. Run the following command inside of the project root directory. `WORKSPACE` must be set in the same terminal that will run Jupyter Lab.
+
+```bash
+jupyter lab
+```
+
+Open jupyter lab in a web browser, select `Anomaly_Detection_Notebook.ipynb` and select `conda env:anomaly_det_refkit` as the jupyter kernel. Now you can follow the notebook's instructions step by step.
 
 ## Run Using Argo Workflows on K8s Using Helm
 ### 1. Install Helm
