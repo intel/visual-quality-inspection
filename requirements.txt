@@ -3,7 +3,7 @@ pandas~=2.0.3
 Pillow~=10.0.0
 prettytable~=3.8.0
 scikit-learn-intelex==2023.2.1
-intel-extension-for-pytorch==1.13.100
+intel-extension-for-pytorch==2.1.0
 torch==1.13.1 --index-url https://download.pytorch.org/whl/cpu
 torchvision --index-url https://download.pytorch.org/whl/cpu
 tqdm~=4.65.0
