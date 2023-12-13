@@ -18,6 +18,7 @@ from torchvision.models import resnet18, resnet50
 from sklearn import metrics
 from sklearn.decomposition import PCA
 import intel_extension_for_pytorch as ipex
+from itertools import chain
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -74,6 +75,7 @@ def inference_score(partial_model, pca_kernel, dataset, feature_shape, model_con
         gt = torch.zeros(len_dataset)
         scores = np.empty(len_dataset)
         count = 0
+        img_names = []
         for k, data in enumerate(tqdm(dataloader)):
             inputs = data['data'].contiguous(memory_format=torch.channels_last)
             if config['precision'] == 'bfloat16':
@@ -97,18 +99,22 @@ def inference_score(partial_model, pca_kernel, dataset, feature_shape, model_con
             scores[count: count + num_im] = -fre_score
 
             gt[count:count + num_im] = labels
+
+            img_names.append(data['img_name'])
+
             count += num_im
         gt = gt.numpy()
-        return scores, gt
+        img_names = list(chain.from_iterable(img_names))
+        return scores, gt, img_names
 
 def get_scores(pca_kernel, features):
     count = 0
     oi_j = pca_kernel.transform(features.T)
     oi_reconstructed = pca_kernel.inverse_transform(oi_j)
     fre = torch.square(features.T - torch.tensor(oi_reconstructed))
-    print(fre.shape)
+    # print(fre.shape)
     fre_score = torch.sum(fre, dim=1)  # NxCxHxW --> NxHxW   
-    print(fre_score.shape)
+    # print(fre_score.shape)
     return fre_score
 
 def inference_workflow_bk(model, pca_kernel, dataset,config):
@@ -269,6 +275,7 @@ def main(config):
                         im_size=dataset_config['image_size'])
         testset = Mvtec(dataset_config['root_dir'],object_type=dataset_config['category_type'],split='test',
                         defect_type='all',im_size=dataset_config['image_size'])
+
         partial_model, feature_shape =  get_partial_model(model,trainset, model_config)
         
         model_ts = prepare_torchscript_model(partial_model, config)
@@ -276,12 +283,14 @@ def main(config):
         train_features, train_gt = get_train_features(model_ts, trainset, feature_shape, config)
         pca_kernel = get_PCA_kernel(train_features,config)
         
-        scores, test_gt = inference_score(model_ts, pca_kernel, testset, feature_shape, model_config)
-
-        
+        scores, test_gt, img_names = inference_score(model_ts, pca_kernel, testset, feature_shape, model_config)
         auroc, threshold = compute_auroc(test_gt,scores)
         
         accuracy = compute_accuracy(test_gt, scores, threshold)
+        print("Saving prediction scores in scores.csv file")
+        np.savetxt('scores.csv', np.column_stack((img_names,scores,[threshold for i in range(len(scores))],
+            [1 if i >= threshold else 0 for i in scores], test_gt)),
+            header='image_path,pred_score, threshold, final_score, gt_score', delimiter=',',fmt='%s')
         print("Inference on {} test images are completed!!!".format(len(testset)))
         print("AUROC  {} on test images".format(auroc))
         print("Accuracy {}% on test images".format(accuracy))

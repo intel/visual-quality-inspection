@@ -40,7 +40,7 @@ class Mvtec(Dataset):
             image = image.convert('RGB')
         image = self.transform(image)
         labels = self.data_frame.iloc[idx, 1]
-        sample = {'data': image, 'label': labels}
+        sample = {'data': image, 'label': labels, 'img_name':img_name}
 
         return sample
 
