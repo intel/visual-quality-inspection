@@ -284,13 +284,14 @@ def main(config):
         pca_kernel = get_PCA_kernel(train_features,config)
         
         scores, test_gt, img_names = inference_score(model_ts, pca_kernel, testset, feature_shape, model_config)
+
         auroc, threshold = compute_auroc(test_gt,scores)
         
         accuracy = compute_accuracy(test_gt, scores, threshold)
         print("Saving prediction scores in scores.csv file")
         np.savetxt('scores.csv', np.column_stack((img_names,scores,[threshold for i in range(len(scores))],
-            [1 if i >= threshold else 0 for i in scores], test_gt)),
-            header='image_path,pred_score, threshold, final_score, gt_score', delimiter=',',fmt='%s')
+            ['regular' if i >= threshold else 'anomaly' for i in scores])),
+            header='image_path,pred_score, threshold, anomaly_status', delimiter=',',fmt='%s')
         print("Inference on {} test images are completed!!!".format(len(testset)))
         print("AUROC  {} on test images".format(auroc))
         print("Accuracy {}% on test images".format(accuracy))
