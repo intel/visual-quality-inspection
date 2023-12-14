@@ -288,7 +288,7 @@ def main(config):
         
         accuracy = compute_accuracy(test_gt, scores, threshold)
         print("Saving prediction scores in scores.csv file")
-        np.savetxt('scores.csv', np.column_stack((img_names,scores,[threshold for i in range(len(scores))],
+        np.savetxt('/cnvrg/scores.csv', np.column_stack((img_names,scores,[threshold for i in range(len(scores))],
             [1 if i >= threshold else 0 for i in scores], test_gt)),
             header='image_path,pred_score, threshold, final_score, gt_score', delimiter=',',fmt='%s')
         print("Inference on {} test images are completed!!!".format(len(testset)))
@@ -300,7 +300,7 @@ def main(config):
 if __name__ == "__main__":
     """Base function for anomaly detection workload"""
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_file", type=str, required=True)
+    parser.add_argument("--config_file", type=str, required=False,default="eval.yaml", help="specify the config file name")
     args = parser.parse_args()
     with open(args.config_file, "r") as f:
         config = yaml.safe_load(f)

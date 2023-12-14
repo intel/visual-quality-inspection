@@ -21,7 +21,7 @@
 
 title: finetuning
 version: 1.0.0
-description: "Fine-tuning on the augmented dataset to attain closely aligned feature embeddings for practical applications"
+description: "Finetuning on the augmented dataset to attain closely aligned feature embeddings for practical applications"
 icon: python
 author: "Intel"
 author_email: "info@cnvrg.io"
@@ -37,11 +37,5 @@ compute:
   - SPR.medium
   
 
-image: /docker.io/intel/ai-workflows:pa-anomaly-tlt-disease-prediction
+image: ai-workflows:pa-anomaly-tlt-disease-prediction
 language: python3
-
-arguments:
-  - key: config_file
-    type: 'categorical'
-    values:
-      - 'finetune.yaml'

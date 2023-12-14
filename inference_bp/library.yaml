@@ -37,11 +37,6 @@ compute:
   - SPR.medium
   
 
-image: docker.io/intel/ai-workflows:pa-anomaly-prediction
+image: ai-workflows:pa-anomaly-prediction
 language: python3
 
-arguments:
-  - key: config_file
-    type: 'categorical'
-    values:
-      - 'eval.yaml'
