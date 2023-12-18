@@ -9,4 +9,4 @@ torchvision --index-url https://download.pytorch.org/whl/cpu
 tqdm~=4.65.0
 PyYAML~=6.0.1
 dill~=0.3.6
-neural-compressor~=2.1.1
+neural-compressor~=2.4
