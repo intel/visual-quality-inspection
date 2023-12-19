@@ -21,7 +21,7 @@
 
 title: Dataset
 version: 1.0.0
-description: "Downloads the MVTec AD Dataset and notes data, splits into train test set using dataset librarian"
+description: "Downloads the MVTec AD Dataset and notes data splits into train test set using dataset librarian"
 icon: python
 author: "Intel"
 author_email: "info@cnvrg.io"
@@ -32,12 +32,9 @@ requirements:
   cpu: 64
   memory: 64
   gpu: 0
-  hpu: 0
-compute:
-  - SPR.medium
-  
+  hpu: 0  
 
-image:  docker.io/intel/ai-workflows:pa-anomaly-detection
+image:  ai-workflows:pa-anomaly-detection
 language: python3
 
 arguments:

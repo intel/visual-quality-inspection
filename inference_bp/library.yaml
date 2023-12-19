@@ -28,15 +28,18 @@ author_email: "info@cnvrg.io"
 tags:
   - inference
 command: python anomaly_detection.py
+
 requirements:
   cpu: 64
   memory: 64
   gpu: 0
-  hpu: 0
-compute:
-  - SPR.medium
-  
+  hpu: 0  
 
 image: ai-workflows:pa-anomaly-prediction
 language: python3
 
+arguments:
+  - key: config_file
+    type: 'categorical'
+    values:
+      - 'eval.yaml'

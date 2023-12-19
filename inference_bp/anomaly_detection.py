@@ -300,7 +300,7 @@ def main(config):
 if __name__ == "__main__":
     """Base function for anomaly detection workload"""
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_file", type=str, required=False,default="eval.yaml", help="specify the config file name")
+    parser.add_argument("--config_file", type=str, required=True, help="specify the config file name")
     args = parser.parse_args()
     with open(args.config_file, "r") as f:
         config = yaml.safe_load(f)
