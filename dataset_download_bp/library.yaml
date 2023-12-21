@@ -21,12 +21,14 @@
 
 title: Dataset
 version: 1.0.0
-description: "Downloads the MVTec AD Dataset and notes data splits into train test set using dataset librarian"
+description: "Downloads the MVTec Dataset using dataset librarian"
 icon: python
 author: "Intel"
 author_email: "info@cnvrg.io"
 tags:
   - training
+
+
 command: python download_dataset.py
 requirements:
   cpu: 64
@@ -40,8 +42,4 @@ language: python3
 arguments:
   - key: ''
     type: discrete
-    min: 0
-    max: 0
-    scale: linear
-    steps: 0
-    values: []
+    values: '20'

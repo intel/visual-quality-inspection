@@ -27,6 +27,9 @@ author: "cnvrg"
 author_email: "info@cnvrg.io"
 tags:
   - inference
+
+kind: webservice
+
 command: python anomaly_detection.py
 
 requirements:
