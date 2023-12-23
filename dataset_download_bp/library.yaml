@@ -39,7 +39,4 @@ requirements:
 image:  ai-workflows:pa-anomaly-detection
 language: python3
 
-arguments:
-  - key: ''
-    type: discrete
-    values: '20'
+arguments: []

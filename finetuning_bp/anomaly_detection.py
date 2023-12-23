@@ -6,6 +6,7 @@
 ###################################
 import os
 import sys
+sys.path.append('..')
 import yaml
 import argparse
 import numpy as np
@@ -253,6 +254,7 @@ def main(config):
     if fine_tune:
         global ad
         sys.path.append('frameworks.ai.transfer-learning/')
+        sys.path.append('../transfer-learning/')
         from workflows.vision_anomaly_detection.src import anomaly_detection_wl as ad
         
         dataset = ad.get_dataset(os.path.join(dataset_config['root_dir'],dataset_config['category_type']), 

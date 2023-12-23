@@ -100,11 +100,11 @@ tasks:
     image: ai-workflows:pa-anomaly_detection
     language: python3
 
-
-    - key: config_file
-      type: 'categorical'
-      values:
-        - 'eval.yaml'
+    params:
+      - key: config_file
+        type: 'categorical'
+        values:
+          - 'eval.yaml'
      
      
 relations:

@@ -41,4 +41,4 @@ arguments:
   - key: config_file
     type: 'categorical'
     values:
-      - 'finetune.yaml'
+      - 'finetuning.yaml'
