@@ -38,7 +38,7 @@ requirements:
   gpu: 0
   hpu: 0  
 
-image: ai-workflows:pa-anomaly-prediction
+image: docker.io/intel/ai-workflows:pa-anomaly-prediction
 language: python3
 
 arguments:

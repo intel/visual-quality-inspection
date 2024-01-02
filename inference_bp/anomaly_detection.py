@@ -209,6 +209,7 @@ def load_custom_model(path, config):
     try:
         path = os.path.join(path,config['model']['feature_extractor']+'_'+
                             config['model']['name']+'_'+config['dataset']['category_type']+'.pth.tar')
+        print(path)
         if os.path.exists(path):
             ckpt = torch.load(path,map_location=torch.device('cpu'))
             print("Loading the model from the following path: {}".format(path))

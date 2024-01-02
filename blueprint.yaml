@@ -49,7 +49,7 @@ tasks:
       gpu: 0
       hpu: 0
 
-    image: ai-workflows:pa-anomaly-detection
+    image: docker.io/intel/ai-workflows:pa-anomaly-detection
     language: python3
 
 
@@ -70,14 +70,14 @@ tasks:
       gpu: 0
       hpu: 0
 
-    image: ai-workflows:pa-tlt-anomaly-detection
+    image: docker.io/intel/ai-workflows:pa-tlt-anomaly-detection
     language: python3
     
     params: 
     - key: config_file
       type: 'categorical'
       values:
-        - 'finetune.yaml'
+        - 'finetuning.yaml'
 
       
   - title: Inference
@@ -97,7 +97,7 @@ tasks:
       gpu: 0
       hpu: 0
 
-    image: ai-workflows:pa-anomaly_detection
+    image: docker.io/intel/ai-workflows:pa-anomaly-detection
     language: python3
 
     params:

@@ -21,7 +21,7 @@
 
 title: finetuning
 version: 1.0.0
-description: "Finetuning on the augmented dataset for customized  applications"
+description: "Finetuning on the augmented dataset for customized applications"
 icon: python
 author: "Intel"
 author_email: "info@cnvrg.io"
@@ -34,7 +34,7 @@ requirements:
   gpu: 0
   hpu: 0  
 
-image: ai-workflows:pa-tlt-anomaly-detection
+image: docker.io/intel/ai-workflows:pa-tlt-anomaly-detection
 language: python3
 
 arguments:
