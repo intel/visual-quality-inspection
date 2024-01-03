@@ -19,14 +19,14 @@
 #
 # SPDX-License-Identifier: MIT
 
-title: inference
+title: inferencevqi
 version: 1.0.0
 description: "Runs inference on the images"
-icon: Intel
-author: "cnvrg"
+icon: python
+author: "Intel"
 author_email: "info@cnvrg.io"
 tags:
-  - inference
+  - training
 
 kind: webservice
 
@@ -36,9 +36,9 @@ requirements:
   cpu: 64
   memory: 64
   gpu: 0
-  hpu: 0  
+  hpu: 0
 
-image: docker.io/intel/ai-workflows:pa-anomaly-prediction
+image: ai-workflows:pa-anomaly-prediction
 language: python3
 
 arguments:
@@ -46,3 +46,4 @@ arguments:
     type: 'categorical'
     values:
       - 'eval.yaml'
+

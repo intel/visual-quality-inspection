@@ -28,7 +28,7 @@ author: "Intel"
 author_email: "info@cnvrg.io"
 
 tags:
-  - training, inference
+  - training
 
 tasks:
   - title: Dataset
@@ -38,7 +38,7 @@ tasks:
     type: exec
 
     # The library data
-    library: Dataset
+    library: dataset
     library_version: 1.0.0
     # The flattened library parameters (in this case we have training library)
     command: python download_dataset.py
@@ -49,8 +49,9 @@ tasks:
       gpu: 0
       hpu: 0
 
-    image: docker.io/intel/ai-workflows:pa-anomaly-detection
+    image: ai-workflows:pa-anomaly-detection
     language: python3
+    params: []
 
 
   - title: finetuning
@@ -70,7 +71,7 @@ tasks:
       gpu: 0
       hpu: 0
 
-    image: docker.io/intel/ai-workflows:pa-tlt-anomaly-detection
+    image: ai-workflows:pa-tlt-anomaly-detection
     language: python3
     
     params: 
@@ -86,7 +87,7 @@ tasks:
 
     type: exec
 
-    library: Inference
+    library: inferencevqi
     library_version: 1.0.0
 
     command: python anomaly_detection.py
@@ -97,14 +98,14 @@ tasks:
       gpu: 0
       hpu: 0
 
-    image: docker.io/intel/ai-workflows:pa-anomaly-detection
+    image: ai-workflows:pa-anomaly_detection
     language: python3
 
     params:
-      - key: config_file
-        type: 'categorical'
-        values:
-          - 'eval.yaml'
+    - key: config_file
+      type: 'categorical'
+      values:
+        - 'eval.yaml'
      
      
 relations:
