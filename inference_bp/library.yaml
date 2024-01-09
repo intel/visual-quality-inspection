@@ -33,8 +33,8 @@ kind: webservice
 command: python anomaly_detection.py
 
 requirements:
-  cpu: 64
-  memory: 64
+  cpu: 12
+  memory: 24
   gpu: 0
   hpu: 0
 

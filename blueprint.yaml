@@ -44,8 +44,8 @@ tasks:
     command: python download_dataset.py
 
     requirements:
-      cpu: 64
-      memory: 64
+      cpu: 12
+      memory: 24
       gpu: 0
       hpu: 0
 
@@ -66,8 +66,8 @@ tasks:
     command: python anomaly_detection.py
 
     requirements:
-      cpu: 64
-      memory: 64
+      cpu: 12
+      memory: 24
       gpu: 0
       hpu: 0
 
@@ -93,12 +93,12 @@ tasks:
     command: python anomaly_detection.py
 
     requirements:
-      cpu: 64
-      memory: 64
+      cpu: 12
+      memory: 24
       gpu: 0
       hpu: 0
 
-    image: ai-workflows:pa-anomaly_detection
+    image: ai-workflows:pa-anomaly-detection
     language: python3
 
     params:
