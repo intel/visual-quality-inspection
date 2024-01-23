@@ -1,35 +1,12 @@
-# Anomaly Detection: Visual Quality Inspection in the Industrial Domain
-
-
-## Introduction
-Manual anomaly detection is time and labor-intensive which limits its applicability on large volumes of data that are typical in industrial settings. Application of artificial intelligence and machine learning is transforming Industrial Internet of Things (IIoT) segments by enabling higher productivity, better insights, less downtime, and superior product quality. 
-
-The goal of this anomaly detection reference use case is to provide AI-powered visual quality inspection on the high resolution input images by identifing rare, abnormal events such as defects in a part being manufactured on an industrial production line. Use this reference solution as-is on your dataset, curate it to your needs by fine-tuning the models and changing configurations to get improved performance, modify it to meet your productivity and performance goals by making use of the modular architecture and realize superior performance using the Intel optimized software packages and libraries for Intel hardware that are built into the solution.
-
-
-The goal of this anomaly detection reference use case is to provide AI-powered visual quality inspection on high resolution input images by identifying rare, abnormal events such as defects in a part being manufactured on an industrial production line. Use this reference solution as-is on your dataset, curate it to your needs by fine-tuning the models, change configurations to get improved performance, and modify it to meet your productivity and performance goals by making use of the modular architecture and realize superior performance using the Intel optimized software packages and libraries for Intel hardware that are built into the solution.
 
 ## **Table of Contents**
 - [Technical Overview](#technical-overview)
     - [DataSet](#DataSet)
-- [Validated Hardware Details](#validated-hardware-details)
-- [Software Requirements](#software-requirements)
-- [How it Works?](#how-it-works)
-- [Get Started](#get-started)
-    - [Download the Workflow Repository](#Download-the-Workflow-Repository)
-    - [Download the Transfer Learning Tool](#Download-the-Transfer-Learning-Tool)
-- [Ways to run this reference use case](#Ways-to-run-this-reference-use-case)
-    - [Run Using Docker](#run-using-docker)
-    - [Run Using Argo Workflows on K8s using Helm](#run-using-argo-workflows-on-k8s-using-helm)
-    - [Run Using Bare Metal](#run-using-bare-metal) 
-- [Expected Output](#expected-output)
-- [Summary and Next Steps](#summary-and-next-steps)
-    - [Adopt to your dataset](#adopt-to-your-dataset)
-    - [Adopt to your model](#adopt-to-your-model)
-- [Learn More](#learn-more)
+- [Blueprint](#blueprint)
+
 - [Support](#support)
 
-## Solution Technical Overview
+## Technical Overview
 Classic and modern anomaly detection techniques have certain challenges: 
 - Feature engineering needs to be performed to extract representations from the raw data. Traditional ML techniques rely on hand-crafted features that may not always generalize well to other settings. 
 - Classification techniques require labeled training data, which is challenging because anomalies are typically rare occurrences and obtaining it increases the data collection & annotation effort. 
@@ -46,30 +23,24 @@ More information can be in the paper [MVTec AD – A Comprehensive Real-World Da
 <br>
 *Table 1:  Statistical overview of the MVTec AD dataset. For each category, the number of training and test images is given together with additional information about the defects present in the respective test images. [Source](https://www.mvtec.com/fileadmin/Redaktion/mvtec.com/company/research/datasets/mvtec_ad.pdf)*
 
+# Blueprint
+## Intel’s Visual Quality Inspection Reference Kit
+This blueprint is a one click refkit to provide an end-to-end solution on how 
+to provide AI-powered visual quality inspection on the high resolution input images by identifing rare, abnormal events such as defects in a part being manufactured on an industrial production line. Use this reference solution as-is on your dataset, curate it to your needs by fine-tuning the models and changing configurations to get improved performance, modify it to meet your productivity and performance goals by making use of the modular architecture and realize superior performance using the Intel optimized software packages and libraries for Intel hardware that are built into the solution.
 
-## Validated Hardware Details
-There are workflow-specific hardware and software setup requirements depending on how the workflow is run. Bare metal development system and Docker image running locally have the same system requirements. 
+
+The goal of this anomaly detection reference use case is to provide AI-powered visual quality inspection on high resolution input images by identifying rare, abnormal events such as defects in a part being manufactured on an industrial production line. Use this reference solution as-is on your dataset, curate it to your needs by fine-tuning the models, change configurations to get improved performance, and modify it to meet your productivity and performance goals by making use of the modular architecture and realize superior performance using the Intel optimized software packages and libraries for Intel hardware that are built into the solution.
+
+# Flow
+1. Click on Use Blueprint button.
+2. You will be redirected to your blueprint flow page.
+3. Go to the project settings section and update the configuration or leave as default to check on built-in demo. To change the dir_url in first task allows you to try with other datasources.
+4. Click on the Run Flow button.
+5. The system will automatically connect with the provided dataset, train a pytorch base model, extract features from trained torch model and train a PCA model, providing an end-to-end visual quality inspection solution to provide .
+6. Expected output is finetuned pytorch model, PCA model and scores on test dataset. Scores.csv file outlines anomaly score, threshold, final prediction for each test images.
 
 
-### On premise
-| Recommended Hardware         | Precision  |
-| ---------------------------- | ---------- |
-| Intel® 4th Gen Xeon® Scalable Performance processors| float32, bfloat16 |
-| Intel® 1st, 2nd, 3rd Gen Xeon® Scalable Performance processors| float32 |
-
-### On cloud instance
-The reference architecture has been validated to run on AWS m6i.16xlarge instance that has Intel(R) Xeon(R) Platinum 8375C CPU @ 2.90GHz, 64 vCPU, 256 GiB memory, 30 GB SSD storage, Ubuntu 22.04.2 LTS. The instance was hosted under dedicated tenancy and requires atleast 30 GB storage to accomodate the code and dataset.
-
-## Software Requirements 
-Linux OS (Ubuntu 20.04) is used in this reference solution. Make sure the following dependencies are installed.
-
-1. `sudo apt update`
-1. `sudo apt-get install -y libgl1 libglib2.0-0`
-1. pip/conda OR python3.9-venv
-1. git
-
-## How It Works?
-
+# Solution Technical Detail
 This reference use case uses a deep learning based approach, named deep-feature modeling (DFM) and falls within the broader area of out-of-distribution (OOD) detection i.e. when a model sees an input that differs from its training data, it is marked as an anomaly. Learn more about the approach [here.](https://arxiv.org/pdf/1909.11786.pdf) 
 
 The use case provides 3 options for modeling of the vision subtask:
@@ -93,275 +64,6 @@ During inference, the feature from a test image is generated through the same ne
 - The use case is presented in a modular architecture. To improve productivity and reduce time-to-solution, transfer learning methods are made available through an independent workflow that seamlessly uses Intel Transfer Learning Tool APIs underneath and a config file allows the user to change parameters and settings without having to deep-dive and modify the code.
 - There is flexibility to select any pre-trained model and any intermediate layer for feature extraction.
 - The use case is enabled with Intel optimized foundational tools.
-
-
-## Get Started
-
-Define an environment variable that will store the workspace path, this can be an existing directory or one created specifically for this reference use case. 
-```
-export WORKSPACE=/path/to/workspace/directory
-```
-
-### Download the Workflow Repository
-
-Create a working directory for the reference use case and clone the [Visual Quality Inspection Workflow](https://github.com/intel/visual-quality-inspection) repository into your working directory.
-```
-mkdir -p $WORKSPACE && cd $WORKSPACE
-git clone https://github.com/intel/visual-quality-inspection
-cd $WORKSPACE/visual-quality-inspection
-```
-
-### Download the Transfer Learning Tool
-```
-git submodule update --init --recursive
-export PYTHONPATH=$WORKSPACE/visual-quality-inspection/transfer-learning/
-```
-
-## Ways to run this reference use case
-This reference kit offers three options for running the fine-tuning and inference processes:
-
-- [Docker](#run-using-docker)
-- [Argo Workflows on K8s Using Helm](#run-using-argo-workflows-on-k8s-using-helm)
-- [Bare Metal](#run-using-bare-metal)
-
-Details about each of these methods can be found below. Keep in mind that each method must be executed in a separate environment from each other. If you run first Docker Compose and then bare metal, this will cause issues.
-
-## Run Using Docker
-Follow these instructions to set up and run our provided Docker image. For running on bare metal, see the [bare metal](#run-using-bare-metal) instructions.
-
-### 1. Set Up Docker Engine and Docker Compose
-You'll need to install Docker Engine on your development system. Note that while **Docker Engine** is free to use, **Docker Desktop** may require you to purchase a license. See the [Docker Engine Server installation instructions](https://docs.docker.com/engine/install/#server) for details.
-
-
-To build and run this workload inside a Docker Container, ensure you have Docker Compose installed on your machine. If you don't have this tool installed, consult the official [Docker Compose installation documentation](https://docs.docker.com/compose/install/linux/#install-the-plugin-manually).
-
-
-```bash
-DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-mkdir -p $DOCKER_CONFIG/cli-plugins
-curl -SL https://github.com/docker/compose/releases/download/v2.7.0/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
-chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
-docker compose version
-```
-
-### 2. Install Workflow Packages and Intel Transfer Learning Toolkit
-Ensure you have completed steps in the [Get Started Section](#get-started).
-
-### 3. Set Up Docker Image
-Build or Pull the provided docker image.
-
-```bash
-cd $WORKSPACE/visual-quality-inspection/docker
-docker compose build
-```
-OR
-```bash
-docker pull intel/ai-workflows:pa-anomaly-detection
-docker pull intel/ai-workflows:pa-tlt-anomaly-detection
-```
-
-### 4. Preprocess Dataset with Docker Compose
-Prepare dataset for Anomaly Detection workflows and accept the legal agreement to use the Intel Dataset Downloader.
-
-```bash
-mkdir -p $WORKSPACE/data && chmod 777 $WORKSPACE/data
-cd $WORKSPACE/visual-quality-inspection/docker
-USER_CONSENT=y docker compose run preprocess 
-```
-
-| Environment Variable Name | Default Value | Description |
-| --- | --- | --- |
-| DATASET_DIR | `$PWD/../data` | Unpreprocessed dataset directory |
-| USER_CONSENT | n/a | Consent to legal agreement | <!-- TCE: Please help me word this better -->
-
-### 5. Run Pipeline with Docker Compose
-
-The Vision Finetuning container must complete successfully before the Evaluation container can begin. The Evaluation container uses the model and checkpoint files created by the vision fine-tuning container stored in the `${OUTPUT_DIR}` directory to complete the evaluation tasks.
-
-
-```mermaid
-%%{init: {'theme': 'dark'}}%%
-flowchart RL
-  VDATASETDIR{{"/${DATASET_DIR"}} x-. "-$PWD/../data}" .-x stocktltfinetuning
-  VCONFIGDIR{{"/${CONFIG_DIR"}} x-. "-$PWD/../configs}" .-x stocktltfinetuning
-  VOUTPUTDIR{{"/${OUTPUT_DIR"}} x-. "-$PWD/../output}" .-x stocktltfinetuning
-  VDATASETDIR x-. "-$PWD/../data}" .-x stockevaluation
-  VCONFIGDIR x-. "-$PWD/../configs}" .-x stockevaluation
-  VOUTPUTDIR x-. "-$PWD/../output}" .-x stockevaluation
-  stockevaluation --> stocktltfinetuning
-
-  classDef volumes fill:#0f544e,stroke:#23968b
-  class Vsimsiam,VDATASETDIR,VCONFIGDIR,VOUTPUTDIR,,VDATASETDIR,VCONFIGDIR,VOUTPUTDIR volumes
-```
-
-Run entire pipeline to view the logs of different running containers.
-
-```bash
-docker compose run stock-evaluation &
-```
-
-| Environment Variable Name | Default Value | Description |
-| --- | --- | --- |
-| CONFIG | `eval` | Config file name |
-| CONFIG_DIR | `$PWD/../configs` | Anomaly Detection Configurations directory |
-| DATASET_DIR | `$PWD/../data` | Preprocessed dataset directory |
-| OUTPUT_DIR | `$PWD/../output` | Logfile and Checkpoint output |
-
-#### View Logs
-Follow logs of each individual pipeline step using the commands below:
-
-```bash
-docker compose logs stock-tlt-fine-tuning -f
-```
-
-To view inference logs
-```bash
-fg
-```
-
-### 6. Run One Workflow with Docker Compose
-Create your own script and run your changes inside of the container or run the evaluation without waiting for fine-tuning.
-
-```mermaid
-%%{init: {'theme': 'dark'}}%%
-flowchart RL
-  Vtransferlearning{{../transfer-learning}} x-.-x dev
-  VCONFIGDIR{{"/${CONFIG_DIR"}} x-. "-$PWD/../configs}" .-x dev
-  VDATASETDIR{{"/${DATASET_DIR"}} x-. "-$PWD/../data}" .-x dev
-  VOUTPUTDIR{{"/${OUTPUT_DIR"}} x-. "-$PWD/../output}" .-x dev
-
-  classDef volumes fill:#0f544e,stroke:#23968b
-  class Vtransferlearning,VCONFIGDIR,VDATASETDIR,VOUTPUTDIR volumes
-```
-
-Run using Docker Compose.
-
-```bash
-docker compose run dev
-```
-
-| Environment Variable Name | Default Value | Description |
-| --- | --- | --- |
-| CONFIG | `eval` | Config file name |
-| CONFIG_DIR | `$PWD/../configs` | Anomaly Detection Configurations directory |
-| DATASET_DIR | `$PWD/../data` | Preprocessed Dataset |
-| OUTPUT_DIR | `$PWD/output` | Logfile and Checkpoint output |
-| SCRIPT | `anomaly_detection.py` | Name of Script |
-
-#### Run Docker Image in an Interactive Environment
-
-If your environment requires a proxy to access the internet, export your
-development system's proxy settings to the docker environment:
-```bash
-export DOCKER_RUN_ENVS="-e ftp_proxy=${ftp_proxy} \
-  -e FTP_PROXY=${FTP_PROXY} -e http_proxy=${http_proxy} \
-  -e HTTP_PROXY=${HTTP_PROXY} -e https_proxy=${https_proxy} \
-  -e HTTPS_PROXY=${HTTPS_PROXY} -e no_proxy=${no_proxy} \
-  -e NO_PROXY=${NO_PROXY} -e socks_proxy=${socks_proxy} \
-  -e SOCKS_PROXY=${SOCKS_PROXY}"
-```
-
-Run the workflow with the ``docker run`` command, as shown:
-
-```bash
-export CONFIG_DIR=$PWD/../configs
-export DATASET_DIR=$PWD/../data
-export OUTPUT_DIR=$PWD/../output
-docker run -a stdout ${DOCKER_RUN_ENVS} \
-           -e PYTHONPATH=/workspace/transfer-learning \
-           -v /$PWD/../transfer-learning:/workspace/transfer-learning \
-           -v /${CONFIG_DIR}:/workspace/configs \
-           -v /${DATASET_DIR}:/workspace/data \
-           -v /${OUTPUT_DIR}:/workspace/output \
-           --privileged --init -it --rm --pull always --shm-size=8GB \
-           intel/ai-workflows:pa-anomaly-detection \
-           bash
-```
-
-Run the command below for fine-tuning and inference:
-```bash
-python /workspace/anomaly_detection.py --config_file /workspace/configs/finetuning.yaml
-```
-
-### 7. Clean Up Docker Containers
-Stop containers created by docker compose and remove them.
-
-```bash
-docker compose down
-```
-
-## Run Using Argo Workflows on K8s Using Helm
-### 1. Install Helm
-- Install [Helm](https://helm.sh/docs/intro/install/)
-```bash
-curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 && \
-chmod 700 get_helm.sh && \
-./get_helm.sh
-```
-### 2. Setting up K8s
-- Install [Argo Workflows](https://argoproj.github.io/argo-workflows/quick-start/) and [Argo CLI](https://github.com/argoproj/argo-workflows/releases)
-- Configure your [Artifact Repository](https://argoproj.github.io/argo-workflows/configure-artifact-repository/)
-- Ensure that your dataset and config files are present in your chosen artifact repository.
-### 3. Install Workflow Template
-```bash
-export NAMESPACE=argo
-helm install --namespace ${NAMESPACE} --set proxy=${http_proxy} anomaly-detection ./chart
-argo submit --from wftmpl/workspace --namespace=${NAMESPACE}
-```
-### 4. View 
-To view your workflow progress
-```bash
-argo logs @latest -f
-```
-
-## Run Using Bare Metal
-
-### 1. Create environment and install software packages
-
-Using conda:
-```
-conda create -n anomaly_det_refkit python=3.9
-conda activate anomaly_det_refkit
-pip install -r requirements.txt
-```
-
-Using virtualenv:
-```
-python3 -m venv anomaly_det_refkit
-source anomaly_det_refkit/bin/activate
-pip install -r requirements.txt
-```
-
-### 2. Download the dataset
-
-Download the mvtec dataset using Intel Model Zoo Dataset Librarian
-```
-pip install dataset-librarian
-mkdir $WORKSPACE/visual-quality-inspection/data
-python -m dataset_librarian.dataset -n mvtec-ad --download --preprocess -d $WORKSPACE/visual-quality-inspection/data
-```
-
-### 3. Select parameters and configurations
-
-Select the parameters and configurations in the [finetuning.yaml](configs/README.md) file.
-
-NOTE: 
-When using SimSiam self supervised training, download the Sim-Siam weights based on ResNet50 model and place under simsiam directory:
-```
-mkdir $WORKSPACE/visual-quality-inspection/simsiam
-wget --directory-prefix=/simsiam/ https://dl.fbaipublicfiles.com/simsiam/models/100ep-256bs/pretrain/checkpoint_0099.pth.tar -o $WORKSPACE/visual-quality-inspection/simsiam/checkpoint_0099.pth.tar
-```
-
-### 4. Running the end-to-end use case 
-
-Using Transfer Learning Tool based fine-tuning:
-
-In finetuning.yaml, set **'fine_tune'** flag to true. If you downloaded the data from [DataSet](#DataSet) **change ./data/ to ./mvtec_dataset/** and set the pretrained/simsiam/cutpaste settings accordingly.
-Change other settings as intended in finetuning.yaml to run different configurations.
-```
-cd $WORKSPACE/visual-quality-inspection
-python anomaly_detection.py --config_file $WORKSPACE/visual-quality-inspection/configs/finetuning.yaml
-```
 
 ## Expected Output
 
@@ -389,60 +91,6 @@ python anomaly_detection.py --config_file $WORKSPACE/visual-quality-inspection/c
 *Above results are on single node Dual socket 4th Generation Intel Xeon Scalable 8480+ (codenamed: Sapphire Rapids) Processor. 56 cores per socket, Intel® Turbo Boost Technology enabled, Intel® Hyper-Threading Technology enabled, 1024 GB memory (16x64GB), Configured Memory speed=4800 MT/s, INTEL SSDSC2BA012T4, CentOS Linux 8, BIOS=EGSDCRB.86B.WD.64.2022.29.7.13.1329, CPU Governor=performance, intel-extension-for-pytorch v2.0.0, torch 2.0.0, scikit-learn-intelex v2023.1.1, pandas 2.0.1. Configuration: precision=bfloat16, batch size=32, features extracted from pretrained resnet50v1.50 model.*
 
 
-
-## Summary and Next Steps
-
-* If you want to enable distributed training on k8s for your use case, please follow steps to apply that configuration mentioned here [Intel® Transfer Learning Tools](https://github.com/IntelAI/transfer-learning/docker/README.md#kubernetes) which provides insights into k8s operators and yml file creation.
-
-* The reference use case above demonstrates an Anomaly Detection approach using deep feature extraction and out-of-distrabution detection. It uses a tunable, modular workflow for fine-tuning the model & extractingits features, both of which uses the Intel® Transfer Learning Tool underneath. For optimal performance on Intel architecture, the scripts are also enabled with Intel extension for PyTorch, Intel extension for scikit-learn and has an option to run bfloat16 on 4th Gen Intel Xeon scalable processors using Intel® Advanced Matrix Extensions (Intel® AMX).
-
-### How to customize this use case
-Tunable configurations and parameters are exposed using yaml config files allowing users to change model training hyperparameters, datatypes, paths, and dataset settings without having to modify or search through the code.
-
-
-#### Adopt to your dataset
-This reference use case can be easily deployed on a different or customized dataset by simply arranging the images for training and testing in the following folder structure (Note that this approach only uses good images for training):
-
-```mermaid
-graph TD;
-    dataset-->train;
-    dataset-->test;
-    train-->Good;
-    test-->crack;
-    test-->good;
-    test-->joint;
-    test-->dot;
-    test-->other_anomalies;
-```
-
-For example, to run it for a [Marble Surface Anomaly Detection dataset](https://www.kaggle.com/datasets/wardaddy24/marble-surface-anomaly-detection-2) in Kaggle, download the dataset and update the train folder to only include the 'good' folder. Move the sub-folders with anomaly images in train folder to either the corresponding test folders or delete them.
-
-#### Adopt to your model
-
-#### 1. Change to a different pre-trained model from Torchvision:
-Change the 'model/name' variable in $WORKSPACE/visual-quality-inspection/configs/finetuning.yaml to the intended model e.g.: resnet18
-
-For simsiam, download the Sim-Siam weights based on the new model and place it under the simsiam directory. If no pre-trained simsiam weights are available, fine-tuning will take time and have to be run for more epochs. 
-Change other settings as intended in config.yaml to run different configurations. Then run the application using:
-```
-python anomaly_detection.py --config_file $WORKSPACE/visual-quality-inspection/configs/finetuning.yaml
-```
-
-
-#### 2. Plug-in your own pre-trained customized model:
-
-In finetuning.yaml, change 'fine_tune' flag to false and provide a custom model path under 'saved_model_path'.
-Change other settings as intended in config.yaml to run different configurations.
-
-To test the custom model with the MVTec AD dataset, add the preprocess flag to the dataset.py script to generate CSV files under all classes required for data loading:
-```
-python dataset.py -n mvtec-ad --download --preprocess -d ../../../
-```
-
-Then run the application using:
-```
-python anomaly_detection.py --config_file $WORKSPACE/visual-quality-inspection/configs/finetuning.yaml
-```
 
 
 ## Learn More
