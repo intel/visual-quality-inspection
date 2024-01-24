@@ -30,7 +30,7 @@ More information can be in the paper [MVTec AD – A Comprehensive Real-World Da
 <br>
 *Table 1:  Statistical overview of the MVTec AD dataset. For each category, the number of training and test images is given together with additional information about the defects present in the respective test images. [Source](https://www.mvtec.com/fileadmin/Redaktion/mvtec.com/company/research/datasets/mvtec_ad.pdf)*
 
-# Solution Technical Details
+## Solution Technical Details
 This reference use case uses a deep learning based approach, named deep-feature modeling (DFM) and falls within the broader area of out-of-distribution (OOD) detection i.e. when a model sees an input that differs from its training data, it is marked as an anomaly. Learn more about the approach [here.](https://arxiv.org/pdf/1909.11786.pdf) 
 
 The use case provides 3 options for modeling of the vision subtask:
