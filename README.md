@@ -1,12 +1,25 @@
+# Intel’s Visual Quality Inspection Reference Kit
+## Blueprint
+This blueprint is a one click refkit to provide an end-to-end solution on how 
+to provide AI-powered visual quality inspection on the high resolution input images by identifing rare, abnormal events such as defects in a part being manufactured on an industrial production line. Use this reference solution as-is on your dataset, curate it to your needs by fine-tuning the models and changing configurations to get improved performance, modify it to meet your productivity and performance goals by making use of the modular architecture and realize superior performance using the Intel optimized software packages and libraries for Intel hardware that are built into the solution.
+
+
+
+## Flow
+1. Click on Use Blueprint button.
+2. You will be redirected to your blueprint flow page.
+3. Go to the project settings section and update the configuration or leave as default to check on built-in demo. To change the dir_url in first task allows you to try with other datasources.
+4. Click on the Run Flow button.
+5. The system will automatically connect with the provided dataset, train a pytorch base model, extract features from trained torch model and train a PCA model, providing an end-to-end visual quality inspection solution to provide .
+6. Expected output is finetuned pytorch model, PCA model and scores on test dataset. Scores.csv file outlines anomaly score, threshold, final prediction for each test images.
 
 ## **Table of Contents**
-- [Technical Overview](#technical-overview)
+- [Solution Technical Overview](#technical-overview)
     - [DataSet](#DataSet)
-- [Blueprint](#blueprint)
-
+- [Solution Technical Details](#technical-details)
 - [Support](#support)
 
-## Technical Overview
+## Solution Technical Overview
 Classic and modern anomaly detection techniques have certain challenges: 
 - Feature engineering needs to be performed to extract representations from the raw data. Traditional ML techniques rely on hand-crafted features that may not always generalize well to other settings. 
 - Classification techniques require labeled training data, which is challenging because anomalies are typically rare occurrences and obtaining it increases the data collection & annotation effort. 
@@ -23,24 +36,7 @@ More information can be in the paper [MVTec AD – A Comprehensive Real-World Da
 <br>
 *Table 1:  Statistical overview of the MVTec AD dataset. For each category, the number of training and test images is given together with additional information about the defects present in the respective test images. [Source](https://www.mvtec.com/fileadmin/Redaktion/mvtec.com/company/research/datasets/mvtec_ad.pdf)*
 
-# Blueprint
-## Intel’s Visual Quality Inspection Reference Kit
-This blueprint is a one click refkit to provide an end-to-end solution on how 
-to provide AI-powered visual quality inspection on the high resolution input images by identifing rare, abnormal events such as defects in a part being manufactured on an industrial production line. Use this reference solution as-is on your dataset, curate it to your needs by fine-tuning the models and changing configurations to get improved performance, modify it to meet your productivity and performance goals by making use of the modular architecture and realize superior performance using the Intel optimized software packages and libraries for Intel hardware that are built into the solution.
-
-
-The goal of this anomaly detection reference use case is to provide AI-powered visual quality inspection on high resolution input images by identifying rare, abnormal events such as defects in a part being manufactured on an industrial production line. Use this reference solution as-is on your dataset, curate it to your needs by fine-tuning the models, change configurations to get improved performance, and modify it to meet your productivity and performance goals by making use of the modular architecture and realize superior performance using the Intel optimized software packages and libraries for Intel hardware that are built into the solution.
-
-# Flow
-1. Click on Use Blueprint button.
-2. You will be redirected to your blueprint flow page.
-3. Go to the project settings section and update the configuration or leave as default to check on built-in demo. To change the dir_url in first task allows you to try with other datasources.
-4. Click on the Run Flow button.
-5. The system will automatically connect with the provided dataset, train a pytorch base model, extract features from trained torch model and train a PCA model, providing an end-to-end visual quality inspection solution to provide .
-6. Expected output is finetuned pytorch model, PCA model and scores on test dataset. Scores.csv file outlines anomaly score, threshold, final prediction for each test images.
-
-
-# Solution Technical Detail
+# Solution Technical Details
 This reference use case uses a deep learning based approach, named deep-feature modeling (DFM) and falls within the broader area of out-of-distribution (OOD) detection i.e. when a model sees an input that differs from its training data, it is marked as an anomaly. Learn more about the approach [here.](https://arxiv.org/pdf/1909.11786.pdf) 
 
 The use case provides 3 options for modeling of the vision subtask:
