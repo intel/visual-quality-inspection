@@ -13,12 +13,6 @@ to provide AI-powered visual quality inspection on the high resolution input ima
 5. The system will automatically connect with the provided dataset, train a pytorch base model, extract features from trained torch model and train a PCA model, providing an end-to-end visual quality inspection solution to provide .
 6. Expected output is finetuned pytorch model, PCA model and scores on test dataset. Scores.csv file outlines anomaly score, threshold, final prediction for each test images.
 
-## **Table of Contents**
-- [Solution Technical Overview](#Solution-Technical-Overview)
-    - [DataSet](#DataSet)
-- [Solution Technical Details](#Solution-Technical-Details)
-- [Support](#support)
-
 ## Solution Technical Overview
 Classic and modern anomaly detection techniques have certain challenges: 
 - Feature engineering needs to be performed to extract representations from the raw data. Traditional ML techniques rely on hand-crafted features that may not always generalize well to other settings. 
