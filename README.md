@@ -14,9 +14,9 @@ to provide AI-powered visual quality inspection on the high resolution input ima
 6. Expected output is finetuned pytorch model, PCA model and scores on test dataset. Scores.csv file outlines anomaly score, threshold, final prediction for each test images.
 
 ## **Table of Contents**
-- [Solution Technical Overview](#technical-overview)
+- [Solution Technical Overview](#Solution-Technical-Overview)
     - [DataSet](#DataSet)
-- [Solution Technical Details](#technical-details)
+- [Solution Technical Details](#Solution-Technical-Details)
 - [Support](#support)
 
 ## Solution Technical Overview
