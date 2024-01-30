@@ -1,6 +1,6 @@
 numpy~=1.26.1
 pandas~=2.0.3
-Pillow~=10.0.0
+Pillow~=10.2.0
 prettytable~=3.8.0
 scikit-learn-intelex==2023.2.1
 intel-extension-for-pytorch==1.13.100
